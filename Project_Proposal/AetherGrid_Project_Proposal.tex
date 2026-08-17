@@ -1,0 +1,1655 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlist[itemize]{leftmargin=1.5em,itemsep=3pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.7em,itemsep=4pt,topsep=3pt}
+
+\definecolor{headingblue}{RGB}{31,55,75}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{headingblue}}
+  {\thesection}{0.8em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{headingblue}}
+  {\thesubsection}{0.8em}{}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsubsection}{0.7em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=headingblue,
+    urlcolor=headingblue,
+    pdftitle={AetherGrid AI: An Autonomous Logistics and Emergency-Dispatch Simulation},
+    pdfauthor={Vishal Singla and Sparsh Verma}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small AetherGrid AI}
+\rhead{\small Project Proposal}
+\cfoot{\small Page \thepage\ of \pageref{LastPage}}
+\setlength{\headheight}{14pt}
+
+
+
+
+
+\begin{document}
+
+
+
+
+
+\begin{titlepage}
+\centering
+
+\vspace*{1.5cm}
+
+{\Large\bfseries Thapar Institute of Engineering and Technology}
+
+\vspace{0.8cm}
+
+{\large Project Proposal for UCS503P}
+
+\vspace{1.5cm}
+
+{\Huge\bfseries AetherGrid AI}
+
+\vspace{0.4cm}
+
+{\Large\bfseries An Autonomous Logistics and\\
+Emergency-Dispatch Simulation}
+
+\vspace{1.5cm}
+
+{\large\itshape A simulation-driven intelligent dispatch system for\\
+dynamic routing, optimal vehicle assignment, and predictive\\
+idle-vehicle repositioning}
+
+\vfill
+
+\begin{tabular}{rl}
+\textbf{Presented by:} & Vishal Singla \\
+\textbf{Roll No.:} & 1024240009 \\
+\textbf{Presented by:} & Sparsh Verma \\
+\textbf{Roll No.:} & 1024240011 \\
+\textbf{Course:} & Software Engineering(UCS503P)\\
+\textbf{Presented to:} & Dr. Zeelani\\
+
+\end{tabular}
+
+\vspace{1.5cm}
+
+{\large August 2026}
+
+\end{titlepage}
+
+
+
+
+
+\section{Abstract}
+
+AetherGrid AI is a simulation-based intelligent dispatch system
+designed to study how a mixed fleet of emergency and logistics
+vehicles can be managed in a changing urban environment. The system
+models a city as a dynamic road network in which congestion, weather,
+hazards, and road closures can continuously change the cost of
+travel. It then combines pathfinding, vehicle-request assignment,
+multi-stop route optimization, and reinforcement learning to make
+dispatch decisions.
+
+The project is designed as a seeded and reproducible discrete-event
+simulation. Emergency and logistics requests arrive continuously,
+are collected in short dispatch batches, and are assigned to suitable
+vehicles. Dynamic A* is used for route execution, while Dijkstra is
+used to calculate the travel-time matrix required by the assignment
+stage. The Hungarian algorithm is used for one-to-one batch
+assignment, while a Genetic Algorithm is used for multi-drop
+logistics routes with time windows. A Q-Learning or Deep Q-Network
+(DQN) based policy is used only for repositioning idle vehicles
+between dispatch batches. This separation ensures that the learning
+component cannot interrupt or invalidate an active emergency
+dispatch.
+
+A real-time Mission Control dashboard will display vehicles,
+requests, routes, road conditions, telemetry, and simulation
+statistics. The project will be evaluated against simple baseline
+strategies using response time, service-level compliance, route
+cost, energy consumption, runtime, and reproducibility. The primary
+objective is not to claim a new algorithm, but to demonstrate the
+correct and measurable integration of established algorithms into a
+complete real-time simulation system.
+
+
+
+
+
+\section{Introduction}
+
+Urban emergency response and logistics operations require vehicles to
+be assigned to requests quickly and intelligently. The difficulty is
+not only finding a short route. The system must also decide which
+vehicle should serve which request, account for changing road
+conditions, handle several requests at the same time, and maintain
+good vehicle positions for future demand.
+
+A conventional nearest-vehicle strategy can work well in simple
+situations, but it becomes less effective when demand is uneven,
+roads become unavailable, or several vehicles compete for the same
+requests. AetherGrid addresses this problem through a simulation
+environment in which the complete dispatch process can be observed,
+tested, and compared under controlled conditions.
+
+The immediate engineering objective is to build a reproducible
+simulation engine that combines a live cost-priced street graph with
+three cooperating decision layers:
+
+\begin{enumerate}
+    \item dynamic pathfinding,
+    \item batch-optimal vehicle assignment, and
+    \item learned repositioning of idle vehicles.
+\end{enumerate}
+
+These layers are exposed through a real-time Mission Control
+dashboard so that the behavior of the system can be observed during
+live scenarios.
+
+
+
+
+
+\section{Problem Statement}
+
+Dispatching a heterogeneous fleet such as ambulances, fire engines,
+drones, and delivery vans against a continuous stream of requests is
+a difficult optimization problem. Streets, demand, vehicle
+availability, and operating conditions can all change while the
+system is running.
+
+The major problems considered in AetherGrid are described below.
+
+\subsection{Combinatorial Assignment Problem}
+
+If several vehicles and several requests are available at the same
+time, there may be many possible vehicle-request combinations.
+Trying every possible combination is inefficient for real-time
+dispatch.
+
+A system therefore needs an assignment strategy that can find a
+high-quality solution without testing every possible arrangement.
+
+\subsection{Changing Road Conditions}
+
+The shortest route under normal conditions may not remain the best
+route when congestion, weather, hazards, or road closures occur.
+
+Therefore, the road network must be treated as dynamic rather than
+static.
+
+\subsection{Myopic Dispatch}
+
+A nearest-vehicle strategy considers the current request but may
+ignore the effect of its decision on future requests. Assigning the
+only nearby vehicle to a current request may leave an important area
+without a suitable vehicle.
+
+AetherGrid therefore separates immediate dispatch from future
+positioning.
+
+\subsection{Disruption Handling}
+
+The system must continue to operate when roads are closed or hazards
+are introduced. A closed road must never be selected by a route.
+
+This requirement is important because the project is intended to
+demonstrate not only normal-case routing but also graceful behavior
+under disruption.
+
+
+
+
+
+\section{Aim and Objectives}
+
+\subsection{Aim}
+
+The main aim of AetherGrid AI is to develop a reproducible urban
+dispatch simulation that combines dynamic routing, optimal
+vehicle-request assignment, multi-stop logistics optimization, and
+predictive repositioning of idle vehicles.
+
+\subsection{Objectives}
+
+The project has the following objectives:
+
+\begin{enumerate}
+    \item Build a dynamic graph-based representation of an urban road
+    network.
+
+    \item Model congestion, weather, hazards, and road closures as
+    changing road conditions.
+
+    \item Generate emergency and logistics requests continuously
+    using a controlled stochastic process.
+
+    \item Calculate efficient routes using Dynamic A*, Dijkstra,
+    and HPA* where appropriate.
+
+    \item Build an ETA matrix between available vehicles and pending
+    requests.
+
+    \item Use the Hungarian algorithm to solve the batch vehicle-
+    request assignment problem.
+
+    \item Include deadline-aware penalties so that late emergency
+    responses receive a higher assignment cost.
+
+    \item Use a Genetic Algorithm to solve multi-drop logistics
+    problems with time windows.
+
+    \item Use Q-Learning or DQN to reposition only idle vehicles
+    between dispatch batches.
+
+    \item Develop a real-time Mission Control dashboard for
+    visualization and scenario control.
+
+    \item Maintain deterministic, seed-based simulation runs for
+    testing and reproducibility.
+
+    \item Compare intelligent strategies against simple greedy
+    baselines using measurable performance metrics.
+\end{enumerate}
+
+
+
+
+
+\section{Proposed Solution}
+
+AetherGrid is designed as a discrete-event simulation engine with a
+web-based visualization layer.
+
+The proposed system contains the following major components.
+
+\subsection{Dynamic Road Network}
+
+The city is represented as a graph containing locations and roads.
+Every road has a current travel cost. The cost can change during the
+simulation as traffic, weather, or hazards change.
+
+Road closures are handled differently from ordinary hazards. A
+hazard increases the cost of a road, whereas a closed road is removed
+from the graph entirely.
+
+\subsection{Pathfinding Suite}
+
+The project uses multiple pathfinding methods for different purposes:
+
+\begin{itemize}
+    \item \textbf{Dynamic A*:} route execution using the current road
+    costs.
+    \item \textbf{Dijkstra:} calculation of shortest travel costs
+    used for the vehicle-request ETA matrix.
+    \item \textbf{HPA*:} hierarchical pathfinding for larger or
+    long-haul routes where a complete fine-grained search may be
+    unnecessarily expensive.
+\end{itemize}
+
+\subsection{Batch Dispatch}
+
+Requests are collected for a short dispatch interval. The proposed
+batch interval is:
+
+\begin{equation}
+    \Delta = 5\,\mathrm{s}
+    \label{eq:batch}
+\end{equation}
+
+At each dispatch interval, the system calculates current travel
+costs, generates the ETA matrix, and solves the vehicle-request
+assignment problem.
+
+\subsection{Logistics Route Optimization}
+
+Emergency dispatch generally involves one immediate destination,
+while logistics operations may involve several destinations.
+
+For multi-drop logistics missions, AetherGrid uses a Genetic
+Algorithm to search for routes that minimize travel cost while
+respecting delivery time windows.
+
+\subsection{Idle Vehicle Repositioning}
+
+The reinforcement-learning component is intentionally restricted to
+idle vehicles. It does not override a live dispatch.
+
+Between batches, the RL policy may move an idle vehicle toward an
+area where future demand is expected to be higher. This allows the
+system to introduce a limited form of predictive behavior without
+making the safety-critical dispatch layer dependent on the
+convergence of a learning model.
+
+
+
+
+
+\section{System Workflow}
+
+The complete AetherGrid workflow is as follows:
+
+\begin{enumerate}
+    \item The simulation initializes the road network, vehicles,
+    requests, environmental conditions, and random seed.
+
+    \item Requests arrive according to the selected request
+    generation model.
+
+    \item Requests are temporarily stored until the next dispatch
+    batch.
+
+    \item The current road conditions are used to calculate the cost
+    of each available road.
+
+    \item Roads affected by closures are removed from the graph.
+
+    \item Dijkstra or A* is used to calculate travel costs between
+    vehicles and requests.
+
+    \item The resulting values form the vehicle-request cost matrix.
+
+    \item The Hungarian algorithm assigns vehicles to requests.
+
+    \item If a request belongs to a multi-drop logistics mission,
+    the Genetic Algorithm based VRPTW solver is used instead.
+
+    \item Assigned vehicles execute their routes using Dynamic A*.
+
+    \item Idle vehicles that remain unassigned may be repositioned
+    by the reinforcement-learning policy.
+
+    \item Vehicle states, routes, requests, and performance metrics
+    are sent to the dashboard.
+
+    \item After a mission is completed, the vehicle returns to the
+    idle pool and becomes available for the next batch.
+\end{enumerate}
+
+This creates a continuous control loop in which the result of one
+dispatch cycle affects the state of the next cycle.
+
+
+
+
+
+\section{Mathematical Formulation}
+
+This section defines the mathematical models used by AetherGrid.
+Each equation is followed by a direct explanation of its variables
+and purpose.
+
+
+
+
+
+\subsection{Dynamic Road Network}
+
+The urban environment is represented as a weighted graph:
+
+\begin{equation}
+    G_t = (V,E_t)
+    \label{eq:graph}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $V$ is the set of locations or intersections.
+    \item $E_t$ is the set of roads available at time $t$.
+    \item $G_t$ represents the current road network.
+\end{itemize}
+
+The subscript $t$ indicates that the graph can change during the
+simulation.
+
+If a road is closed, it is removed from the current graph:
+
+\begin{equation}
+    e \notin E_t
+    \qquad
+    \text{if road } e \text{ is closed at time } t.
+    \label{eq:closedroad}
+\end{equation}
+
+This prevents routing algorithms from selecting a closed road.
+
+
+
+
+
+\subsection{Dynamic Road-Cost Model}
+
+The travel cost of a road depends on its normal travel time,
+congestion, weather, and hazards.
+
+The proposed cost function is:
+
+\begin{equation}
+    C_e(t)
+    =
+    T_e
+    \left(1+\alpha\rho_e(t)\right)
+    W_e(t)
+    +
+    \beta H_e(t)
+    \label{eq:roadcost}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $C_e(t)$ is the current travel cost of road $e$.
+    \item $T_e$ is the normal travel time of road $e$.
+    \item $\rho_e(t)$ is the congestion level.
+    \item $\alpha$ controls the effect of congestion.
+    \item $W_e(t)$ is the weather multiplier.
+    \item $H_e(t)$ represents the hazard level.
+    \item $\beta$ controls the hazard penalty.
+\end{itemize}
+
+A higher congestion or hazard level therefore increases the cost of
+using the affected road.
+
+
+
+
+
+\subsection{Request Arrival Model}
+
+Requests can be generated using a Poisson process. The probability
+of receiving $k$ requests during a time interval $t$ is:
+
+\begin{equation}
+    P(N(t)=k)
+    =
+    \frac{(\lambda t)^k e^{-\lambda t}}{k!}
+    \label{eq:poisson}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $N(t)$ is the number of requests during the interval.
+    \item $k$ is the number of requests.
+    \item $\lambda$ is the average request arrival rate.
+    \item $t$ is the duration of the interval.
+\end{itemize}
+
+This allows the simulation to reproduce both ordinary demand and
+bursty demand.
+
+
+
+
+
+\subsection{A* Pathfinding}
+
+For every candidate node $n$, A* calculates:
+
+\begin{equation}
+    f(n)=g(n)+h(n)
+    \label{eq:astar}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $g(n)$ is the actual cost from the starting node to $n$.
+    \item $h(n)$ is the estimated cost from $n$ to the destination.
+    \item $f(n)$ is the estimated total cost through $n$.
+\end{itemize}
+
+The node with the lowest relevant evaluation value is considered
+first during the search.
+
+The edge costs used by A* come from the dynamic road-cost model in
+Equation~\eqref{eq:roadcost}.
+
+
+
+
+
+\subsection{Estimated Time of Arrival}
+
+For vehicle $i$ and request $j$, let $P_{ij}$ denote the selected
+path.
+
+The estimated travel time is:
+
+\begin{equation}
+    ETA_{ij}
+    =
+    \sum_{e\in P_{ij}} C_e(t)
+    \label{eq:eta}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $ETA_{ij}$ is the estimated travel time from vehicle $i$
+    to request $j$.
+    \item $P_{ij}$ is the selected path.
+    \item $C_e(t)$ is the current cost of road $e$.
+\end{itemize}
+
+The ETA values are used to construct the assignment matrix.
+
+
+
+
+
+\subsection{Vehicle-Request Cost Matrix}
+
+Suppose there are $n$ available vehicles and $m$ pending requests.
+The resulting matrix is:
+
+\begin{equation}
+\mathbf{C}
+=
+\begin{bmatrix}
+C_{11} & C_{12} & \cdots & C_{1m} \\
+C_{21} & C_{22} & \cdots & C_{2m} \\
+\vdots & \vdots & \ddots & \vdots \\
+C_{n1} & C_{n2} & \cdots & C_{nm}
+\end{bmatrix}
+\label{eq:costmatrix}
+\end{equation}
+
+Here, $C_{ij}$ represents the cost of assigning vehicle $i$ to
+request $j$.
+
+For a basic model:
+
+\begin{equation}
+    C_{ij}=ETA_{ij}
+    \label{eq:basiccost}
+\end{equation}
+
+The cost can later include additional penalties such as deadline
+violations.
+
+
+
+
+
+\subsection{Hungarian Assignment Model}
+
+Let $x_{ij}$ be a binary decision variable:
+
+\begin{equation}
+x_{ij}
+=
+\begin{cases}
+1, & \text{if vehicle } i \text{ is assigned to request } j,\\
+0, & \text{otherwise.}
+\end{cases}
+\label{eq:assignment}
+\end{equation}
+
+The objective is to minimize total assignment cost:
+
+\begin{equation}
+    \min
+    \sum_{i=1}^{n}
+    \sum_{j=1}^{m}
+    C_{ij}x_{ij}
+    \label{eq:hungarianobjective}
+\end{equation}
+
+Each vehicle can be assigned to at most one simultaneous request:
+
+\begin{equation}
+    \sum_{j=1}^{m}x_{ij}
+    \leq 1,
+    \qquad
+    \forall i
+    \label{eq:vehicleconstraint}
+\end{equation}
+
+Each request can be assigned to at most one vehicle:
+
+\begin{equation}
+    \sum_{i=1}^{n}x_{ij}
+    \leq 1,
+    \qquad
+    \forall j
+    \label{eq:requestconstraint}
+\end{equation}
+
+The Hungarian algorithm is used to solve this assignment problem
+efficiently.
+
+
+
+
+
+\subsection{Deadline-Aware Assignment}
+
+Let $D_j$ be the required deadline of request $j$. If the current
+simulation time is $t$, the expected arrival time is:
+
+\begin{equation}
+    A_{ij}
+    =
+    t+ETA_{ij}
+    \label{eq:arrival}
+\end{equation}
+
+The amount of lateness is:
+
+\begin{equation}
+    L_{ij}
+    =
+    \max
+    \left(
+        0,
+        A_{ij}-D_j
+    \right)
+    \label{eq:lateness}
+\end{equation}
+
+If the vehicle arrives before the deadline, the lateness is zero.
+
+The assignment cost can then be modified to:
+
+\begin{equation}
+    C_{ij}
+    =
+    ETA_{ij}
+    +
+    \mu L_{ij}
+    \label{eq:deadlinecost}
+\end{equation}
+
+where $\mu$ controls the importance of meeting the deadline.
+
+This allows the assignment stage to consider both travel time and
+SLA compliance.
+
+
+
+
+
+\subsection{Vehicle Routing with Time Windows}
+
+For logistics missions involving multiple destinations, the project
+uses the Vehicle Routing Problem with Time Windows (VRPTW).
+
+Let $x_{ij}$ indicate whether a route travels directly from location
+$i$ to location $j$.
+
+The basic objective is:
+
+\begin{equation}
+    \min
+    \sum_{i\in V}
+    \sum_{j\in V}
+    d_{ij}x_{ij}
+    \label{eq:vrptw}
+\end{equation}
+
+where $d_{ij}$ is the travel cost between locations $i$ and $j$.
+
+Each location may also have an acceptable service window:
+
+\begin{equation}
+    a_i
+    \leq
+    T_i
+    \leq
+    b_i
+    \label{eq:timewindow}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $a_i$ is the earliest acceptable arrival time.
+    \item $b_i$ is the latest acceptable arrival time.
+    \item $T_i$ is the actual arrival time.
+\end{itemize}
+
+
+
+
+
+\subsection{Genetic Algorithm Fitness}
+
+A candidate logistics route $R$ is evaluated using a fitness cost:
+
+\begin{equation}
+    F(R)
+    =
+    D(R)
+    +
+    \gamma P(R)
+    \label{eq:fitness}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $D(R)$ is the travel cost of route $R$.
+    \item $P(R)$ is the penalty caused by constraint violations.
+    \item $\gamma$ controls the importance of those violations.
+\end{itemize}
+
+The Genetic Algorithm attempts to minimize $F(R)$ through selection,
+crossover, and mutation.
+
+
+
+
+
+\subsection{Reinforcement-Learning Model}
+
+The idle-vehicle repositioning problem is represented as a Markov
+Decision Process:
+
+\begin{equation}
+    \mathcal{M}
+    =
+    (\mathcal{S},\mathcal{A},P,R,\gamma)
+    \label{eq:mdp}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $\mathcal{S}$ is the set of possible system states.
+    \item $\mathcal{A}$ is the set of possible repositioning actions.
+    \item $P$ represents state-transition probabilities.
+    \item $R$ represents the reward function.
+    \item $\gamma$ is the discount factor.
+\end{itemize}
+
+The state can include information such as vehicle locations,
+vehicle availability, demand distribution, and road conditions.
+
+
+
+
+
+\subsection{Q-Learning Update}
+
+The Q-value is updated using:
+
+\begin{equation}
+\begin{aligned}
+Q(s,a)
+\leftarrow
+Q(s,a)
++
+\eta
+\Big[
+r
++
+\gamma
+\max_{a'}
+Q(s',a')
+-
+Q(s,a)
+\Big]
+\end{aligned}
+\label{eq:qlearning}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $s$ is the current state.
+    \item $a$ is the selected action.
+    \item $r$ is the reward received.
+    \item $s'$ is the next state.
+    \item $\eta$ is the learning rate.
+    \item $\gamma$ is the discount factor.
+    \item $a'$ represents a possible action in the next state.
+\end{itemize}
+
+The policy is trained to learn which repositioning actions are useful
+for future demand.
+
+
+
+
+
+\subsection{Repositioning Reward}
+
+The repositioning policy must balance faster future response with
+the additional cost of moving idle vehicles.
+
+A simplified reward function is:
+
+\begin{equation}
+    r
+    =
+    -w_TT
+    -
+    w_EE
+    +
+    w_SS
+    \label{eq:reward}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $T$ represents response time.
+    \item $E$ represents additional energy consumption.
+    \item $S$ represents service performance.
+    \item $w_T$ is the response-time weight.
+    \item $w_E$ is the energy-consumption weight.
+    \item $w_S$ is the service-performance weight.
+\end{itemize}
+
+The reward encourages the system to reduce response time and improve
+service while avoiding unnecessary repositioning.
+
+
+
+
+
+\subsection{Deep Q-Network Extension}
+
+If the state space becomes too large for a Q-table, a Deep Q-Network
+can be used to approximate the Q-value:
+
+\begin{equation}
+    Q(s,a;\theta)
+    \label{eq:dqn}
+\end{equation}
+
+where $\theta$ represents the trainable parameters of the neural
+network.
+
+DQN is considered an extension of the initial Q-Learning
+implementation rather than a requirement for the basic simulation.
+
+
+
+
+
+\subsection{Vehicle Battery Model}
+
+For electric vehicles, the battery state is normalized between zero
+and one:
+
+\begin{equation}
+    0
+    \leq
+    B_i(t)
+    \leq
+    1
+    \label{eq:battery}
+\end{equation}
+
+After movement, the battery state can be updated as:
+
+\begin{equation}
+    B_i(t+\Delta t)
+    =
+    B_i(t)
+    -
+    E_i(\Delta t)
+    \label{eq:batteryupdate}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $B_i(t)$ is the battery level of vehicle $i$.
+    \item $E_i(\Delta t)$ is the energy consumed during the interval.
+    \item $\Delta t$ is the simulation time interval.
+\end{itemize}
+
+A vehicle with insufficient battery should not be selected for a
+mission that it cannot complete safely.
+
+
+
+
+
+\section{System Architecture}
+
+AetherGrid follows a layered architecture so that the simulation
+engine, algorithms, and user interface remain separated.
+
+\subsection{Simulation Core}
+
+The simulation core contains:
+
+\begin{itemize}
+    \item the road or grid network,
+    \item vehicle agents,
+    \item request agents,
+    \item environmental conditions,
+    \item vehicle battery state,
+    \item the seeded request generator, and
+    \item the discrete-event or tick-based simulation loop.
+\end{itemize}
+
+The core must be able to run without the web interface. This provides
+a headless mode for testing, benchmarking, and continuous integration.
+
+\subsection{Algorithm Layer}
+
+The algorithm layer contains independent strategy modules:
+
+\begin{itemize}
+    \item Dynamic A*,
+    \item Dijkstra,
+    \item HPA*,
+    \item Hungarian assignment,
+    \item Genetic Algorithm based VRPTW,
+    \item Q-Learning, and
+    \item optional DQN.
+\end{itemize}
+
+Each strategy should have a clear interface so that different
+strategies can be compared without changing the simulation engine.
+
+\subsection{Web and Visualization Layer}
+
+The web layer provides Mission Control functionality.
+
+The dashboard will display:
+
+\begin{itemize}
+    \item the current road network,
+    \item vehicle locations,
+    \item active requests,
+    \item assigned routes,
+    \item road conditions,
+    \item vehicle status,
+    \item battery information,
+    \item response-time statistics,
+    \item SLA compliance, and
+    \item simulation events.
+\end{itemize}
+
+The proposed interface uses WebSocket-based state updates. The
+backend can publish state changes at approximately $10$ Hz while the
+browser renders the visual scene at up to $60$ frames per second.
+
+\subsection{Scenario Laboratory}
+
+The dashboard will also contain a scenario laboratory through which
+the user can inject events such as:
+
+\begin{itemize}
+    \item road closures,
+    \item congestion,
+    \item hazards,
+    \item weather changes,
+    \item demand bursts, and
+    \item new emergency requests.
+\end{itemize}
+
+This makes it possible to demonstrate how the dispatch strategies
+react to controlled disruptions.
+
+
+
+
+
+\section{Proposed Technology Stack}
+
+The following technology stack is proposed for implementation.
+
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{4.0cm}X}
+\toprule
+Layer & Proposed Technology / Approach \\
+\midrule
+Programming Language & Python 3.11 \\
+Numerical Computation & NumPy and standard Python libraries \\
+Graph Algorithms & Custom implementations of A*, Dijkstra, and HPA* \\
+Assignment & Hungarian algorithm implementation \\
+Route Optimization & Genetic Algorithm for VRPTW \\
+Reinforcement Learning & Q-Learning with optional DQN extension \\
+Simulation & Seeded discrete-event / tick-based simulation engine \\
+Backend & Python web backend with WebSocket communication \\
+Frontend & HTML, CSS, JavaScript, and Canvas-based visualization \\
+Testing & Unit tests and property-based tests \\
+Version Control & Git and GitHub \\
+Continuous Integration & Automated seed-stable regression and invariant tests \\
+\bottomrule
+\end{tabularx}
+\caption{Proposed technology stack for AetherGrid AI.}
+\label{tab:techstack}
+\end{table}
+
+The project intentionally uses established algorithms and standard
+software components. The primary engineering challenge is their
+correct integration into one reproducible system.
+
+
+
+
+
+\section{Implementation Methodology}
+
+The project will be implemented incrementally so that each stage
+produces a working and testable result.
+
+\subsection{Phase 1: Simulation Foundation}
+
+The first phase will implement:
+
+\begin{itemize}
+    \item the road graph,
+    \item vehicle and request models,
+    \item environmental conditions,
+    \item the battery state model,
+    \item the seeded request generator, and
+    \item the simulation loop.
+\end{itemize}
+
+\textbf{Exit criterion:} a seed-stable headless simulation run.
+
+\subsection{Phase 2: Routing and Assignment}
+
+The second phase will implement:
+
+\begin{itemize}
+    \item Dynamic A*,
+    \item Dijkstra,
+    \item HPA*,
+    \item ETA matrix generation,
+    \item Hungarian assignment,
+    \item deadline-aware costs, and
+    \item baseline greedy dispatch.
+\end{itemize}
+
+\textbf{Exit criterion:} routing and assignment tests pass against
+known small examples and baseline strategies.
+
+\subsection{Phase 3: Logistics and Reinforcement Learning}
+
+The third phase will implement:
+
+\begin{itemize}
+    \item VRPTW representation,
+    \item Genetic Algorithm route optimization,
+    \item Q-Learning for idle-vehicle repositioning, and
+    \item optional DQN extension.
+\end{itemize}
+
+\textbf{Exit criterion:} each strategy can be run independently and
+compared under identical seeded scenarios.
+
+\subsection{Phase 4: Mission Control Dashboard}
+
+The fourth phase will implement:
+
+\begin{itemize}
+    \item live map visualization,
+    \item vehicle telemetry,
+    \item request monitoring,
+    \item route visualization,
+    \item scenario injection,
+    \item strategy switching, and
+    \item performance charts.
+\end{itemize}
+
+\textbf{Exit criterion:} a complete scenario can be run from the
+dashboard while the dispatch strategy is changed during operation.
+
+\subsection{Phase 5: Testing and Evaluation}
+
+The final phase will focus on:
+
+\begin{itemize}
+    \item performance benchmarking,
+    \item reproducibility,
+    \item stress testing,
+    \item disruption testing,
+    \item baseline comparison, and
+    \item final documentation.
+\end{itemize}
+
+\textbf{Exit criterion:} all predefined evaluation experiments have
+been executed and documented.
+
+
+
+
+
+\section{Testing and Validation}
+
+AetherGrid will use both functional tests and performance tests.
+
+\subsection{Functional Invariants}
+
+Important system properties include:
+
+\begin{itemize}
+    \item No route may traverse a closed road.
+    \item A vehicle cannot be assigned to two simultaneous requests.
+    \item A request cannot be assigned to two vehicles.
+    \item Battery levels remain within their valid range.
+    \item Completed vehicles return to the available pool.
+    \item The same random seed produces the same simulation trace.
+\end{itemize}
+
+\subsection{Assignment Validation}
+
+For small problem sizes, the Hungarian solution can be compared
+against brute-force enumeration. For larger problem sizes, it can
+be compared against a greedy nearest-vehicle baseline.
+
+The expected property is that the optimized assignment should not
+have a higher total assignment cost than the corresponding greedy
+assignment under the same cost matrix.
+
+\subsection{Routing Validation}
+
+A* and Dijkstra will be tested on small graphs for which the optimal
+path cost can be calculated independently.
+
+The tests will also verify that introducing a road closure changes
+the route when the original route is no longer valid.
+
+\subsection{Reinforcement-Learning Validation}
+
+The RL component will be evaluated by comparing:
+
+\begin{enumerate}
+    \item no repositioning,
+    \item random repositioning,
+    \item heuristic repositioning, and
+    \item learned repositioning.
+\end{enumerate}
+
+The comparison will use identical demand scenarios and random seeds.
+
+
+
+
+
+\section{Evaluation Metrics}
+
+The following metrics will be used to compare the proposed
+strategies.
+
+\subsection{Average Response Time}
+
+The average response time is:
+
+\begin{equation}
+    \overline{T}
+    =
+    \frac{1}{N}
+    \sum_{i=1}^{N}T_i
+    \label{eq:avgresponse}
+\end{equation}
+
+where $N$ is the number of completed requests and $T_i$ is the
+response time of request $i$.
+
+A lower value indicates faster average response.
+
+\subsection{SLA Compliance Rate}
+
+The percentage of requests completed within their deadlines is:
+
+\begin{equation}
+    SLA_{\mathrm{rate}}
+    =
+    \frac{N_{\mathrm{on\text{-}time}}}
+    {N_{\mathrm{total}}}
+    \times 100
+    \label{eq:sla}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $N_{\mathrm{on\text{-}time}}$ is the number of requests
+    completed within their deadlines.
+    \item $N_{\mathrm{total}}$ is the total number of requests.
+\end{itemize}
+
+A higher value represents better deadline compliance.
+
+\subsection{Average Travel Distance}
+
+The average distance travelled per mission is:
+
+\begin{equation}
+    \overline{D}
+    =
+    \frac{1}{N}
+    \sum_{i=1}^{N}D_i
+    \label{eq:avgdistance}
+\end{equation}
+
+where $D_i$ is the distance travelled during mission $i$.
+
+\subsection{Average Energy Consumption}
+
+The average energy consumption can be measured as:
+
+\begin{equation}
+    \overline{E}
+    =
+    \frac{1}{N}
+    \sum_{i=1}^{N}E_i
+    \label{eq:avgen}
+\end{equation}
+
+where $E_i$ is the energy consumed by mission $i$.
+
+\subsection{Algorithm Runtime}
+
+The runtime of a decision-making algorithm is:
+
+\begin{equation}
+    T_{\mathrm{runtime}}
+    =
+    T_{\mathrm{finish}}
+    -
+    T_{\mathrm{start}}
+    \label{eq:runtime}
+\end{equation}
+
+The measured runtime will be compared with the five-second batch
+interval defined in Equation~\eqref{eq:batch}.
+
+
+
+
+
+\section{Overall Optimization Objective}
+
+AetherGrid attempts to balance response time, service quality,
+energy consumption, and travel distance.
+
+A simplified multi-objective cost is:
+
+\begin{equation}
+    J
+    =
+    w_1\overline{T}
+    +
+    w_2(1-SLA_{\mathrm{rate}})
+    +
+    w_3\overline{E}
+    +
+    w_4\overline{D}
+    \label{eq:overall}
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $\overline{T}$ is the average response time.
+    \item $SLA_{\mathrm{rate}}$ is the SLA compliance rate.
+    \item $\overline{E}$ is the average energy consumption.
+    \item $\overline{D}$ is the average travel distance.
+    \item $w_1,w_2,w_3,w_4$ are weights representing the importance
+    of the corresponding objectives.
+\end{itemize}
+
+The system seeks to minimize $J$ while satisfying the operational
+constraints of the simulation.
+
+The exact weights will be selected during experimentation rather than
+being presented as predetermined results.
+
+
+
+
+
+\section{Experimental Design}
+
+The evaluation will use controlled and reproducible scenarios.
+
+\subsection{Baseline Strategies}
+
+The intelligent strategies will be compared with simpler methods:
+
+\begin{itemize}
+    \item \textbf{Nearest Vehicle:} assigns the closest available
+    vehicle to each request.
+
+    \item \textbf{First-Come-First-Served:} processes requests in
+    arrival order.
+
+    \item \textbf{Greedy Assignment:} repeatedly selects the
+    currently cheapest vehicle-request pair.
+
+    \item \textbf{Hungarian Assignment:} performs batch-level global
+    assignment.
+
+    \item \textbf{Hungarian + RL:} combines optimized dispatch with
+    learned idle-vehicle repositioning.
+\end{itemize}
+
+\subsection{Scenario Categories}
+
+The following scenarios will be tested:
+
+\begin{enumerate}
+    \item Normal traffic and normal request volume.
+    \item High traffic.
+    \item Bursty emergency demand.
+    \item Multiple simultaneous requests.
+    \item Road closure during an active simulation.
+    \item Hazard introduced during an active route.
+    \item Uneven spatial demand.
+    \item High vehicle utilization.
+    \item Mixed emergency and logistics requests.
+\end{enumerate}
+
+Each strategy will be evaluated on identical seeded scenarios to
+ensure that the comparison is fair.
+
+
+
+
+
+\section{Evaluation Hypotheses}
+
+The project will use measurable hypotheses rather than claiming
+performance improvements before the experiments are completed.
+
+\subsection{Hypothesis 1: Batch Matching}
+
+Under bursty demand, the hypothesis is that global batch assignment
+will perform better than a purely greedy nearest-vehicle strategy.
+
+The comparison will use identical request streams and vehicle states.
+
+The hypothesis will be considered unsupported if the measured
+difference is negligible across the selected scenarios.
+
+\subsection{Hypothesis 2: Predictive Repositioning}
+
+The second hypothesis is that repositioning idle vehicles toward
+anticipated demand can reduce future response time compared with
+dispatch without repositioning.
+
+The additional energy and movement cost will also be measured. An
+improvement in response time alone will not be considered sufficient
+if the additional operational cost becomes excessive.
+
+\subsection{Hypothesis 3: Disruption Handling}
+
+The third hypothesis is that the dynamic cost field will allow the
+system to respond to hazards and road closures without violating
+routing constraints.
+
+The test will verify that:
+
+\begin{itemize}
+    \item affected routes are recalculated,
+    \item closed roads are not traversed,
+    \item vehicles continue operating when alternative routes exist,
+    \item no invalid vehicle assignment is produced.
+\end{itemize}
+
+
+
+
+
+\section{Reproducibility and Continuous Integration}
+
+Reproducibility is an important design requirement.
+
+Every simulation run will use an explicit random seed. When the same
+configuration and seed are used, the generated request sequence and
+simulation behavior should be reproducible.
+
+Automated tests will be executed whenever changes are made to the
+project.
+
+Important automated checks include:
+
+\begin{itemize}
+    \item no closed-edge traversal,
+    \item valid battery bounds,
+    \item valid vehicle-request assignments,
+    \item deterministic seeded runs,
+    \item assignment-cost comparison against baseline methods,
+    \item route validity, and
+    \item regression testing of core simulation behavior.
+\end{itemize}
+
+This approach allows the simulation engine to operate in a headless
+mode for automated testing while the same engine can drive the live
+dashboard for demonstrations.
+
+
+
+
+
+\section{Scalability}
+
+The architecture is designed so that the simulation engine is
+separated from the visualization layer.
+
+The assignment problem can be solved using the Hungarian algorithm
+with cubic time complexity:
+
+\begin{equation}
+    O(n^3)
+    \label{eq:hungariancomplexity}
+\end{equation}
+
+for an $n\times n$ assignment matrix.
+
+This makes the assignment stage practical for moderate fleet sizes
+within the fixed dispatch interval. For larger graphs, HPA* can be
+used to reduce the routing search space.
+
+The separation between the simulation engine and dashboard also
+ensures that rendering workload does not directly determine the
+correctness of the simulation.
+
+
+
+
+
+\section{Project Scope}
+
+\subsection{Included in Scope}
+
+The project will include:
+
+\begin{itemize}
+    \item dynamic road-network simulation,
+    \item heterogeneous vehicle simulation,
+    \item emergency and logistics requests,
+    \item congestion and environmental effects,
+    \item road closures and hazards,
+    \item Dynamic A*,
+    \item Dijkstra,
+    \item HPA*,
+    \item Hungarian assignment,
+    \item Genetic Algorithm based VRPTW,
+    \item Q-Learning,
+    \item optional DQN,
+    \item vehicle battery modeling,
+    \item real-time dashboard,
+    \item scenario laboratory,
+    \item reproducible experiments, and
+    \item baseline performance comparison.
+\end{itemize}
+
+\subsection{Outside the Initial Scope}
+
+The following are not required for the first complete version:
+
+\begin{itemize}
+    \item deployment on a real city-wide transportation network,
+    \item direct control of real vehicles,
+    \item dependence on proprietary real-time traffic data,
+    \item production-grade autonomous driving,
+    \item guaranteed real-world emergency response performance.
+\end{itemize}
+
+The system is a simulation and engineering demonstration. Its
+experimental results should therefore be interpreted within the
+conditions of the implemented simulation.
+
+
+
+
+
+\section{Risks and Mitigation}
+
+\subsection{Scope Creep}
+
+The project combines several algorithm families. To control the
+scope, every algorithm will be implemented behind a fixed interface
+and developed in phases.
+
+\subsection{Real-Time Performance}
+
+If routing becomes expensive on larger graphs, HPA* can be introduced
+for long-haul searches. Assignment runtime will also be measured
+against the five-second batch interval from the beginning of
+development.
+
+\subsection{Reinforcement-Learning Instability}
+
+The RL component will remain advisory and will only control idle
+vehicle repositioning. It will never override an active dispatch.
+Therefore, an incompletely trained policy cannot invalidate an
+emergency assignment.
+
+\subsection{Evaluation Ambiguity}
+
+The experiments will be defined before final benchmarking. All
+strategies will be evaluated using identical seeds, scenarios, and
+metrics.
+
+
+
+
+
+\section{Expected Outcomes}
+
+At the completion of the project, the following outcomes are
+expected:
+
+\begin{enumerate}
+    \item A working seeded urban dispatch simulation engine.
+
+    \item A dynamic road graph capable of representing congestion,
+    weather, hazards, and road closures.
+
+    \item A routing system supporting Dynamic A*, Dijkstra, and HPA*.
+
+    \item A batch assignment system using the Hungarian algorithm.
+
+    \item A logistics routing module based on Genetic Algorithm and
+    VRPTW.
+
+    \item A reinforcement-learning module for idle-vehicle
+    repositioning.
+
+    \item A real-time Mission Control dashboard.
+
+    \item A scenario laboratory for controlled disruptions.
+
+    \item Automated tests for important system invariants.
+
+    \item Reproducible benchmark results comparing multiple dispatch
+    strategies.
+\end{enumerate}
+
+The final result will therefore be a complete software system rather
+than an isolated implementation of a single algorithm.
+
+
+
+
+
+\section{Project Deliverables}
+
+The planned deliverables are:
+
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{3.5cm}X}
+\toprule
+Deliverable & Description \\
+\midrule
+Simulation Engine & Seeded urban road, vehicle, request, and environment simulator. \\
+Routing Module & Dynamic A*, Dijkstra, and HPA* implementations. \\
+Assignment Module & Hungarian vehicle-request matching with deadline-aware costs. \\
+Logistics Module & Genetic Algorithm based VRPTW route optimization. \\
+RL Module & Q-Learning based idle-vehicle repositioning with optional DQN extension. \\
+Mission Control & Real-time browser dashboard for visualization and monitoring. \\
+Scenario Lab & Controlled injection of traffic, hazards, closures, and demand bursts. \\
+Testing Suite & Unit, property, invariant, and reproducibility tests. \\
+Benchmark Suite & Seeded comparison against greedy and other baseline strategies. \\
+Documentation & Technical report, architecture documentation, and usage instructions. \\
+\bottomrule
+\end{tabularx}
+\caption{Planned AetherGrid deliverables.}
+\label{tab:deliverables}
+\end{table}
+
+
+
+
+
+\section{Conclusion}
+
+AetherGrid AI proposes a practical simulation-based approach to
+dynamic urban dispatch. Instead of treating routing, assignment, and
+future vehicle positioning as one problem, the system separates them
+into cooperating layers.
+
+The dynamic road model represents changing travel conditions. The
+pathfinding layer calculates routes using current road costs. The
+Hungarian algorithm provides global batch-level assignment for
+one-to-one dispatch. The Genetic Algorithm handles multi-stop
+logistics routing with time windows. Finally, the reinforcement-
+learning layer provides limited predictive behavior by repositioning
+idle vehicles between dispatch cycles.
+
+The project is intentionally designed around established algorithms
+rather than claiming algorithmic novelty. Its contribution is the
+engineering integration of these methods into a reproducible,
+testable, real-time simulation environment.
+
+The final system will allow different strategies to be tested under
+the same controlled scenarios. This makes it possible to determine,
+using measurable evidence, whether global assignment and predictive
+idle-vehicle repositioning actually improve response performance,
+service compliance, and operational efficiency.
+
+\end{document}
