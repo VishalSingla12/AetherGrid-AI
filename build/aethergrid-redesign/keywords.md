@@ -1,0 +1,19 @@
+# KEYWORDS — AetherGrid AI System Design & Pre-Registration Baseline
+discrete-event
+stochastic-city
+dispatch-cadenza
+kuhn-munkres
+bipartite-matching
+priced-seconds
+poisson-arrivals
+pre-registered-hypothesis
+falsification-condition
+step-boundary-invariant
+deterministic-replay
+sha-256-log
+layer-separation
+botanical-slate
+swiss-cad
+architectural-storyboard
+diurnal-rush
+little-law
