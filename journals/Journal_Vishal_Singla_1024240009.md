@@ -40,9 +40,3 @@ Ran internal tests before the demo. Found a bug where a hazard edge was being dr
 ### September 14, 2026
 
 Mid-term demo. Walked the panel through the road graph and the cost-field update live. Biggest piece of feedback: make sure the Hungarian assignment stage stays visibly separate from RL repositioning in the next milestone - which is already how we'd planned Phase 4, so that was reassuring rather than a redirect.
-
----
-
-### Reflection
-
-I went into this project expecting the coding to be the hard part, but honestly the diagrams (DFD especially) caught two design mistakes before I'd written a single line of the engine. Next up, once the short break ends on October 11, is scaling this prototype into the full core engine - proper road network, agent FSM, and the Hungarian assignment stage.
