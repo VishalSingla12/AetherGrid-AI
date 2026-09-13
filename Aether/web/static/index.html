@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherGrid AI — Autonomous Dispatch & Real-Time OpenStreetMap Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root{--bg-dark:#080c10;--bg-panel:rgba(13,19,28,.96);--bg-card:rgba(19,29,43,.88);--border-color:rgba(56,85,120,.35);--accent-cyan:#00e5ff;--accent-green:#00ff88;--accent-yellow:#fbbf24;--accent-red:#ef4444;--accent-purple:#b388ff;--accent-orange:#f97316;--text-main:#f1f5f9;--text-muted:#94a3b8;--font-mono:'JetBrains Mono',monospace;--font-sans:'Plus Jakarta Sans',sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body,html{width:100%;height:100%;overflow:hidden;font-family:var(--font-sans);background:var(--bg-dark);color:var(--text-main)}
+    #app-container{display:flex;flex-direction:column;width:100vw;height:100vh;position:relative}
+    header.top-bar{height:56px;background:var(--bg-panel);backdrop-filter:blur(16px);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:1000;box-shadow:0 4px 25px rgba(0,0,0,.6)}
+    .brand-group{display:flex;align-items:center;gap:12px}.brand-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent-cyan),#2563eb);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-mono);font-size:15px;color:#000;box-shadow:0 0 12px rgba(0,229,255,.4)}
+    .brand-title{font-weight:700;font-size:16px;letter-spacing:.5px;color:#fff}.brand-subtitle{font-size:10px;color:var(--accent-cyan);font-family:var(--font-mono);background:rgba(0,229,255,.1);padding:2px 8px;border-radius:4px;border:1px solid rgba(0,229,255,.3);font-weight:600}
+    .nav-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.control-label{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase}
+    select.select-input,button.btn-control{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-main);padding:6px 11px;border-radius:6px;font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s ease}
+    select.select-input:hover,button.btn-control:hover{border-color:var(--accent-cyan);background:rgba(0,229,255,.12);color:#fff}
+    button.btn-primary{background:linear-gradient(135deg,var(--accent-cyan),#0077ff);color:#050b14;font-weight:700;border:none;box-shadow:0 0 10px rgba(0,229,255,.35)}button.btn-primary:hover{opacity:.95;transform:translateY(-1px);box-shadow:0 0 16px rgba(0,229,255,.6)}
+    button.btn-warning{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45);color:var(--accent-yellow)}button.btn-warning:hover{background:rgba(245,158,11,.35);border-color:var(--accent-yellow)}
+    button.btn-danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.45);color:var(--accent-red)}button.btn-danger:hover{background:rgba(239,68,68,.35);border-color:var(--accent-red)}
+    .workspace{flex:1;display:flex;position:relative;overflow:hidden}#map-view{flex:1;height:100%;background:#070a0e;z-index:10}
+    #weather-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200}
+    .weather-banner{position:absolute;top:16px;right:430px;z-index:500;background:rgba(13,20,30,.92);backdrop-filter:blur(10px);border:1px solid var(--border-color);border-radius:8px;padding:6px 14px;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .3s ease}.weather-icon{font-size:16px}
+    aside.sidebar{width:410px;height:100%;background:var(--bg-panel);backdrop-filter:blur(16px);border-left:1px solid var(--border-color);z-index:100;display:flex;flex-direction:column;box-shadow:-4px 0 30px rgba(0,0,0,.7);overflow-y:auto}
+    .sidebar-section{padding:14px 16px;border-bottom:1px solid var(--border-color)}.section-header{font-size:11px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+    .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:3px;transition:border-color .2s}.metric-card:hover{border-color:rgba(0,229,255,.4)}
+    .metric-title{font-size:10px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase}.metric-val{font-size:17px;font-weight:700;font-family:var(--font-mono);color:var(--text-main)}.metric-val.cyan{color:var(--accent-cyan);text-shadow:0 0 10px rgba(0,229,255,.4)}.metric-val.green{color:var(--accent-green);text-shadow:0 0 10px rgba(0,255,136,.4)}.metric-val.yellow{color:var(--accent-yellow)}.metric-val.red{color:var(--accent-red)}
+    .comp-table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--font-mono);margin-top:4px}.comp-table th{text-align:left;padding:6px 8px;color:var(--text-muted);border-bottom:1px solid var(--border-color);font-weight:600}.comp-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}.comp-table tr:hover td{background:rgba(0,229,255,.08)}.comp-table tr.highlight td{background:rgba(0,255,136,.12);font-weight:600;color:var(--accent-green)}
+    .badge-algo{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block}.badge-dijkstra{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}.badge-astar{background:rgba(0,229,255,.2);color:#00e5ff;border:1px solid rgba(0,229,255,.4)}.badge-bi{background:rgba(0,255,136,.2);color:#00ff88;border:1px solid rgba(0,255,136,.4)}
+    .layer-toggles-bar{display:flex;flex-direction:column;gap:6px;background:rgba(0,0,0,.25);border:1px solid var(--border-color);border-radius:6px;padding:8px 10px;font-size:11px;font-family:var(--font-mono);margin-top:6px}.toggle-row{display:flex;align-items:center;justify-content:space-between}.toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer}.toggle-dot{width:9px;height:9px;border-radius:50%}
+    .road-legend{display:flex;justify-content:space-between;margin-top:8px;padding:6px 8px;background:rgba(0,0,0,.25);border-radius:6px;font-size:10px;font-family:var(--font-mono);color:var(--text-muted)}.legend-item{display:flex;align-items:center;gap:5px}.legend-swatch{width:14px;height:3px;border-radius:2px}
+    .manifest-list{max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}.manifest-item{font-size:11px;font-family:var(--font-mono);background:rgba(255,255,255,.03);padding:5px 8px;border-radius:4px;display:flex;justify-content:space-between;color:#cbd5e1}
+    .log-feed{max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;font-family:var(--font-mono);font-size:11px}.log-entry{padding:5px 8px;border-radius:4px;background:rgba(0,0,0,.35);border-left:3px solid var(--accent-cyan)}.log-entry.warn{border-left-color:var(--accent-yellow);color:#fde68a}.log-entry.alert{border-left-color:var(--accent-red);color:#fca5a5}.log-entry.success{border-left-color:var(--accent-green);color:#86efac}.log-time{color:var(--text-muted);font-size:9px;margin-bottom:1px}
+    .map-tool-palette{position:absolute;top:16px;left:16px;z-index:500;background:var(--bg-panel);backdrop-filter:blur(14px);border:1px solid var(--border-color);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 30px rgba(0,0,0,.7)}
+    .palette-btn{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-main);padding:7px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}.palette-btn:hover,.palette-btn.active{border-color:var(--accent-cyan);background:rgba(0,229,255,.18);color:#fff}
+    .palette-btn.active-close{border-color:var(--accent-red);background:rgba(239,68,68,.25);color:var(--accent-red)}.palette-btn.active-hazard{border-color:var(--accent-yellow);background:rgba(245,158,11,.25);color:var(--accent-yellow)}
+    .vehicle-marker-pulse{width:22px;height:22px;border-radius:50%;background:var(--accent-cyan);border:3px solid #fff;box-shadow:0 0 18px var(--accent-cyan);animation:pulse 1s infinite alternate}@keyframes pulse{0%{transform:scale(.9);box-shadow:0 0 10px var(--accent-cyan)}100%{transform:scale(1.3);box-shadow:0 0 25px var(--accent-cyan)}}
+    .cursor-closure,.cursor-hazard{cursor:crosshair!important}
+    .divergence-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--font-mono);background:rgba(179,136,255,.2);color:var(--accent-purple);border:1px solid rgba(179,136,255,.4)}
+    .hazmat-alert-banner{position:absolute;top:58px;right:430px;z-index:500;background:rgba(20,15,10,.95);backdrop-filter:blur(14px);border:1px solid #f59e0b;border-radius:8px;padding:9px 13px;font-family:var(--font-mono);font-size:11px;display:flex;flex-direction:column;gap:5px;box-shadow:0 6px 25px rgba(245,158,11,.3);max-width:440px;animation:hazmatGlow 1.5s infinite alternate}@keyframes hazmatGlow{0%{box-shadow:0 0 10px rgba(245,158,11,.25);border-color:rgba(245,158,11,.6)}100%{box-shadow:0 0 25px rgba(245,158,11,.55);border-color:#fbbf24}}
+    .hazmat-banner-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.hazmat-alert-title{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:.5px}.hazmat-count-badge{background:rgba(245,158,11,.25);color:#fde68a;border:1px solid rgba(245,158,11,.5);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}.hazmat-alert-desc{font-size:11px;color:#e2e8f0;line-height:1.4}.hazmat-alert-gear{font-size:11px;font-weight:700;color:#00ff88;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);padding:3px 8px;border-radius:4px;margin-top:2px}
+    .route-severed-banner{position:absolute;top:58px;right:430px;z-index:510;background:rgba(25,8,10,.96);backdrop-filter:blur(14px);border:1.5px solid #ef4444;border-radius:8px;padding:10px 14px;font-family:var(--font-mono);font-size:11px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 30px rgba(239,68,68,.45);max-width:440px;animation:severedGlow 1.5s infinite alternate}@keyframes severedGlow{0%{box-shadow:0 0 12px rgba(239,68,68,.35);border-color:rgba(239,68,68,.6)}100%{box-shadow:0 0 28px rgba(239,68,68,.75);border-color:#ef4444}}
+    .route-severed-title{font-size:12px;font-weight:800;color:#ef4444;letter-spacing:.5px}
+    .route-severed-badge{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.5);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+  </style>
+</head>
+<body>
+<div id="app-container">
+  <header class="top-bar">
+    <div class="brand-group">
+      <div class="brand-logo">A</div>
+      <div><div class="brand-title">AetherGrid&nbsp;AI</div></div>
+      <div class="brand-subtitle">MISSION CONTROL · REAL-WORLD URBAN DISPATCH</div>
+    </div>
+    <div class="nav-controls">
+      <span class="control-label">GRID/MAP:</span>
+      <select id="map-selector" class="select-input">
+        <option value="manhattan_large" selected>Manhattan Island (18,912 Nodes)</option>
+        <option value="manhattan_midtown">Manhattan Midtown (1,529 Nodes)</option>
+        <option value="grid50">Metro Grid (50x50, 2,500 Nodes)</option>
+        <option value="grid32">Urban Core (32x32, 1,024 Nodes)</option>
+        <option value="grid16">Tactical Grid (16x16, 256 Nodes)</option>
+      </select>
+      <span class="control-label">BASEMAP:</span>
+      <select id="basemap-selector" class="select-input">
+        <option value="esri_dark" selected>Esri Dark Canvas</option>
+        <option value="osm">OpenStreetMap</option>
+        <option value="satellite">Esri Satellite</option>
+        <option value="opentopo">OpenTopoMap</option>
+      </select>
+      <span class="control-label">WEATHER:</span>
+      <select id="weather-selector" class="select-input">
+        <option value="clear" selected>☀️ Clear (Balanced)</option>
+        <option value="rain">🌧️ Rain (Floods Alleys)</option>
+        <option value="fog">🌫️ Fog (Blinds Highways)</option>
+        <option value="snow">❄️ Snow (Ice on Highways)</option>
+      </select>
+      <button id="btn-dispatch-mission" class="btn-control btn-primary">🚑 Dispatch</button>
+      <button id="btn-traffic-surge" class="btn-control btn-warning">🚨 Congestion Surge</button>
+      <button id="btn-reset-disruptions" class="btn-control btn-danger">↺ Reset</button>
+    </div>
+  </header>
+  <div class="workspace">
+    <div class="map-tool-palette">
+      <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:2px;text-transform:uppercase">INTERACTIVE TOOLS:</div>
+      <button id="tool-route" class="palette-btn active">📍 Select Start / Goal</button>
+      <button id="tool-close" class="palette-btn">🚫 Toggle Road Closure (Click Road)</button>
+      <button id="tool-hazard" class="palette-btn">⚠️ Inject Hazmat Spill (Click Road)</button>
+      <button id="tool-compare" class="palette-btn">⚡ Run Shootout</button>
+      <div style="height:1px;background:rgba(255,255,255,0.12);margin:4px 0;"></div>
+      <button id="btn-quick-close" class="palette-btn" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.5);color:#fca5a5;">🚧 Block Active Route</button>
+      <button id="btn-quick-hazard" class="palette-btn" style="background:rgba(245,158,11,0.2);border-color:rgba(245,158,11,0.5);color:#fde68a;">☣️ Hazmat On Route</button>
+    </div>
+    <div id="weather-banner" class="weather-banner">
+      <span class="weather-icon" id="weather-banner-icon">☀️</span>
+      <span id="weather-banner-text">CLEAR: Balanced terrain costs across all road types.</span>
+    </div>
+    <div id="hazmat-alert-banner" class="hazmat-alert-banner" style="display:none;">
+      <div class="hazmat-banner-header">
+        <span class="hazmat-alert-title" id="hazmat-alert-title">☣️ HAZMAT NOTIFICATION</span>
+        <span id="hazmat-count-badge" class="hazmat-count-badge">1 SPILL</span>
+      </div>
+      <div id="hazmat-alert-desc" class="hazmat-alert-desc">Evaluating corridor threat...</div>
+      <div id="hazmat-alert-gear" class="hazmat-alert-gear">🦺 REQUIRED GEAR: Level C PPE</div>
+    </div>
+    <div id="route-severed-banner" class="route-severed-banner" style="display:none;">
+      <div class="hazmat-banner-header">
+        <span class="route-severed-title">🚫 DESTINATION UNREACHABLE — ALL ROUTES SEVERED</span>
+        <span class="route-severed-badge">INVARIANT I1 UPHELD</span>
+      </div>
+      <div class="hazmat-alert-desc">Zero closed roads traversed. Active physical barriers have cut off all valid corridors to Node <span id="severed-dest-node" style="font-weight:700;color:#fff">--</span>. Remove barriers or select an alternate destination.</div>
+    </div>
+    <div id="map-view"></div>
+    <canvas id="weather-canvas"></canvas>
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-header"><span>Search Telemetry</span><span id="algo-badge" style="color:var(--accent-green);font-weight:700">BIDIRECTIONAL A*</span></div>
+        <div class="metrics-grid">
+          <div class="metric-card"><span class="metric-title">Search Latency</span><span id="metric-latency" class="metric-val cyan">-- ms</span></div>
+          <div class="metric-card"><span class="metric-title">Nodes Expanded</span><span id="metric-expanded" class="metric-val yellow">--</span></div>
+          <div class="metric-card"><span class="metric-title">Search Pruned</span><span id="metric-pruned" class="metric-val green">-- %</span></div>
+          <div class="metric-card"><span class="metric-title">Travel Cost</span><span id="metric-cost" class="metric-val">-- s</span></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-header"><span>Algorithm Shootout</span><span id="divergence-display" class="divergence-badge">Divergence: --%</span></div>
+        <table class="comp-table"><thead><tr><th>Algorithm</th><th>Latency</th><th>Expanded</th><th>Cost</th><th>Speedup</th></tr></thead>
+          <tbody id="comp-table-body">
+            <tr><td><span class="badge-algo badge-dijkstra">Dijkstra</span></td><td>--</td><td>--</td><td>--</td><td>1.0x</td></tr>
+            <tr><td><span class="badge-algo badge-astar">Weighted A*</span></td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+            <tr class="highlight"><td><span class="badge-algo badge-bi">Bidir A*</span></td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+          </tbody>
+        </table>
+        <div class="layer-toggles-bar">
+          <div class="toggle-row"><label class="toggle-label"><input type="checkbox" id="chk-show-bi" checked><span class="toggle-dot" style="background:#00ff88"></span><span>Bidirectional A* (Optimal)</span></label></div>
+          <div class="toggle-row"><label class="toggle-label"><input type="checkbox" id="chk-show-astar" checked><span class="toggle-dot" style="background:#00e5ff"></span><span>Weighted A* (ε=2.5 Greedy)</span></label></div>
+          <div class="toggle-row"><label class="toggle-label"><input type="checkbox" id="chk-show-dijkstra" checked><span class="toggle-dot" style="background:#f59e0b"></span><span>Dijkstra Baseline</span></label></div>
+          <div class="toggle-row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.08)"><label class="toggle-label"><input type="checkbox" id="chk-show-frontier" checked><span class="toggle-dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24"></span><span style="color:#fbbf24;font-weight:700">Explored Frontier</span></label></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-header"><span>Environmental Sensors</span><button id="btn-refresh-net" class="btn-control" style="padding:2px 6px;font-size:10px">Poll</button></div>
+        <div class="metrics-grid">
+          <div class="metric-card"><span class="metric-title">Weather Factor</span><span id="metric-weather" class="metric-val cyan">1.00x</span></div>
+          <div class="metric-card"><span class="metric-title">Mean Congestion</span><span id="metric-congestion" class="metric-val green">0.05</span></div>
+          <div class="metric-card"><span class="metric-title">Active Closures</span><span id="metric-closures" class="metric-val red">0</span></div>
+          <div class="metric-card"><span class="metric-title">Intersections</span><span id="metric-total-nodes" class="metric-val">--</span></div>
+        </div>
+        <div class="road-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:#38bdf8"></span><span>Free (&rho;&lt;0.3)</span></div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#f59e0b"></span><span>Moderate</span></div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#ef4444;box-shadow:0 0 6px #ef4444"></span><span>Gridlock</span></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-header"><span>Turn-by-Turn</span><span id="waypoint-count">0 waypoints</span></div>
+        <div id="street-manifest" class="manifest-list"><div class="manifest-item"><span>Select Start and Destination on map...</span></div></div>
+      </div>
+      <div class="sidebar-section" style="flex:1">
+        <div class="section-header"><span>Mission Log</span></div>
+        <div id="mission-log-feed" class="log-feed">
+          <div class="log-entry success"><div class="log-time">[00:00.0]</div><div>AetherGrid v3.0: Weather-terrain interaction active. All tiles free.</div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+let map=null,canvasRenderer=null,tileLayers={},currentNetwork=null;
+let roadLayerGroup=L.layerGroup(),biRouteLayerGroup=L.layerGroup(),astarRouteLayerGroup=L.layerGroup(),dijkstraRouteLayerGroup=L.layerGroup(),frontierLayerGroup=L.layerGroup(),markersLayerGroup=L.layerGroup(),disruptionMarkersGroup=L.layerGroup(),vehicleMarker=null;
+let startNodeId=null,goalNodeId=null,activeTool='route',isVehicleAnimating=false,latestShootoutData=null;
+let edgeIndex=[];
+let weatherAnimationId=null,weatherType='clear',particles=[];
+
+function initMap(){
+  canvasRenderer=L.canvas({padding:0.5,tolerance:15});
+  map=L.map('map-view',{center:[40.755,-73.98],zoom:13,zoomControl:true,preferCanvas:true});
+  tileLayers.esri_dark=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri (Free)',maxZoom:18});
+  tileLayers.osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM (Free)',maxZoom:19});
+  tileLayers.satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri Imagery',maxZoom:18});
+  tileLayers.opentopo=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'OpenTopoMap',maxZoom:17});
+  tileLayers.esri_dark.addTo(map);
+  roadLayerGroup.addTo(map);frontierLayerGroup.addTo(map);dijkstraRouteLayerGroup.addTo(map);astarRouteLayerGroup.addTo(map);biRouteLayerGroup.addTo(map);disruptionMarkersGroup.addTo(map);markersLayerGroup.addTo(map);
+  map.on('click',onMapClick);
+  setupEventListeners();setupWeatherCanvas();loadNetwork();
+}
+
+function pointToSegmentDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,lenSq=dx*dx+dy*dy;
+  if(lenSq<1e-12)return Math.hypot(px-ax,py-ay);
+  let t=((px-ax)*dx+(py-ay)*dy)/lenSq;t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+
+function findNearestEdge(latlng,maxPx){
+  maxPx=maxPx||35;
+  if(edgeIndex.length===0||!map)return null;
+  const clickPt=map.latLngToContainerPoint(latlng);
+  let best=Infinity,bestE=null;
+  for(const e of edgeIndex){
+    const p1=map.latLngToContainerPoint([e.lat1,e.lon1]);
+    const p2=map.latLngToContainerPoint([e.lat2,e.lon2]);
+    const d=pointToSegmentDist(clickPt.x,clickPt.y,p1.x,p1.y,p2.x,p2.y);
+    if(d<best){best=d;bestE=e;}
+  }
+  return(best<=maxPx)?bestE:null;
+}
+
+function findNearestNode(latlng){
+  if(!currentNetwork)return null;let best=Infinity,bestN=null;
+  for(const n of currentNetwork.nodes){const d=Math.hypot(n.lat-latlng.lat,n.lon-latlng.lng);if(d<best){best=d;bestN=n;}}
+  return(best*111000<500)?bestN:null;
+}
+
+function onMapClick(e){
+  if(activeTool==='close'){
+    const edge=findNearestEdge(e.latlng,35);
+    if(edge){toggleClosure(edge.u,edge.v);logEvent('🚧 CLOSURE TOGGLED on corridor ('+edge.u+'↔'+edge.v+'). Recalculating...','warn');}
+    else logEvent('CLOSURE: No road within click range. Click closer to a road line.','alert');
+  }else if(activeTool==='hazard'){
+    const edge=findNearestEdge(e.latlng,35);
+    if(edge){injectHazard(edge.u,edge.v);logEvent('☣️ HAZMAT SPILL injected on corridor ('+edge.u+'↔'+edge.v+'). Recalculating...','warn');}
+    else logEvent('HAZMAT: No road within click range. Click closer to a road line.','alert');
+  }else if(activeTool==='route'){
+    const node=findNearestNode(e.latlng);
+    if(node){
+      if(!startNodeId||(startNodeId&&goalNodeId)){startNodeId=node.id;goalNodeId=null;logEvent('ORIGIN: Node '+node.id+'. Click destination...');updateEndpointMarkers();}
+      else{goalNodeId=node.id;logEvent('DESTINATION: Node '+node.id+'. Computing routes...','success');updateEndpointMarkers();recalculateAndShootout();}
+    }
+  }
+}
+
+function setupEventListeners(){
+  document.getElementById('basemap-selector').addEventListener('change',e=>{Object.values(tileLayers).forEach(l=>map.removeLayer(l));if(tileLayers[e.target.value])tileLayers[e.target.value].addTo(map);});
+  document.getElementById('map-selector').addEventListener('change',e=>{logEvent('Loading '+e.target.value+'...');fetch('/api/load_map',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({map:e.target.value})}).then(()=>loadNetwork());});
+  document.getElementById('weather-selector').addEventListener('change',e=>{
+    weatherType=e.target.value;updateWeatherVisuals(e.target.value);
+    fetch('/api/weather',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({weather:e.target.value})}).then(r=>r.json()).then(d=>{
+      document.getElementById('metric-weather').textContent=d.multiplier.toFixed(2)+'x';
+      logEvent('⛈ WEATHER: '+d.weather+' active. Route corridors shifting due to terrain-weather interaction.','warn');
+      refreshEdgesStatus();recalculateAndShootout();
+    });
+  });
+  document.getElementById('btn-traffic-surge').addEventListener('click',()=>{
+    logEvent('INJECTING rush-hour congestion...','warn');
+    fetch('/api/traffic_surge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({delta:60})}).then(r=>r.json()).then(d=>{
+      document.getElementById('metric-congestion').textContent=d.mean_congestion;document.getElementById('metric-congestion').className='metric-val red';
+      logEvent('🚨 SURGE: '+d.affected_corridors+' corridors congested (ρ='+d.mean_congestion+'). Routes recomputing...','alert');
+      refreshEdgesStatus();recalculateAndShootout();
+    });
+  });
+  document.getElementById('btn-reset-disruptions').addEventListener('click',()=>{
+    fetch('/api/reset',{method:'POST'}).then(r=>r.json()).then(d=>{
+      document.getElementById('metric-congestion').textContent=d.mean_congestion;document.getElementById('metric-congestion').className='metric-val green';
+      document.getElementById('metric-closures').textContent='0';disruptionMarkersGroup.clearLayers();
+      const sb=document.getElementById('route-severed-banner');if(sb)sb.style.display='none';
+      const hzBtn=document.getElementById('btn-dispatch-mission');if(hzBtn){hzBtn.disabled=false;hzBtn.innerHTML='🚑 Dispatch';}
+      logEvent('↺ RESET: All disruptions cleared. Routes recomputing...','success');refreshEdgesStatus();recalculateAndShootout();
+    });
+  });
+  document.getElementById('btn-dispatch-mission').addEventListener('click',()=>animateVehicleMission());
+  document.getElementById('btn-quick-close').addEventListener('click',()=>{
+    fetch('/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_id:startNodeId,goal_id:goalNodeId,algorithm:'bi_astar'})})
+    .then(r=>r.json()).then(r=>{
+      if(r.success&&r.path_node_ids&&r.path_node_ids.length>3){
+        const mid=Math.floor(r.path_node_ids.length/2);
+        const u=r.path_node_ids[mid], v=r.path_node_ids[mid+1];
+        toggleClosure(u, v);
+        logEvent('🚧 1-CLICK BLOCK: Road segment ('+u+'↔'+v+') on active route closed! Observing instant detour...','alert');
+      }
+    });
+  });
+  document.getElementById('btn-quick-hazard').addEventListener('click',()=>{
+    fetch('/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_id:startNodeId,goal_id:goalNodeId,algorithm:'bi_astar'})})
+    .then(r=>r.json()).then(r=>{
+      if(r.success&&r.path_node_ids&&r.path_node_ids.length>3){
+        const mid=Math.floor(r.path_node_ids.length/2);
+        const u=r.path_node_ids[mid], v=r.path_node_ids[mid+1];
+        injectHazard(u, v);
+        logEvent('☣️ 1-CLICK HAZMAT: Toxic spill injected on route corridor ('+u+'↔'+v+') [+60s penalty]!','warn');
+      }
+    });
+  });
+  document.getElementById('btn-refresh-net').addEventListener('click',()=>refreshEdgesStatus());
+  [{id:'tool-route',name:'route'},{id:'tool-close',name:'close'},{id:'tool-hazard',name:'hazard'},{id:'tool-compare',name:'compare'}].forEach(t=>{
+    document.getElementById(t.id).addEventListener('click',()=>{
+      document.querySelectorAll('.palette-btn').forEach(b=>b.classList.remove('active','active-close','active-hazard'));
+      const btn=document.getElementById(t.id);
+      if(t.name==='close')btn.classList.add('active-close');else if(t.name==='hazard')btn.classList.add('active-hazard');else btn.classList.add('active');
+      activeTool=t.name;
+      const mapEl=document.getElementById('map-view');mapEl.classList.remove('cursor-closure','cursor-hazard');
+      if(t.name==='close'){mapEl.classList.add('cursor-closure');logEvent('🚫 CLOSURE TOOL: Click any road to toggle closure.','warn');}
+      else if(t.name==='hazard'){mapEl.classList.add('cursor-hazard');logEvent('⚠️ HAZMAT TOOL: Click any road to inject hazmat.','warn');}
+      if(activeTool==='compare')recalculateAndShootout();
+    });
+  });
+  document.getElementById('chk-show-bi').addEventListener('change',e=>{if(e.target.checked)biRouteLayerGroup.addTo(map);else map.removeLayer(biRouteLayerGroup);});
+  document.getElementById('chk-show-astar').addEventListener('change',e=>{if(e.target.checked)astarRouteLayerGroup.addTo(map);else map.removeLayer(astarRouteLayerGroup);});
+  document.getElementById('chk-show-dijkstra').addEventListener('change',e=>{if(e.target.checked)dijkstraRouteLayerGroup.addTo(map);else map.removeLayer(dijkstraRouteLayerGroup);});
+  document.getElementById('chk-show-frontier').addEventListener('change',e=>{if(e.target.checked)frontierLayerGroup.addTo(map);else map.removeLayer(frontierLayerGroup);});
+}
+
+function loadNetwork(){
+  logEvent('Connecting to engine...');
+  fetch('/api/network').then(r=>r.json()).then(data=>{
+    currentNetwork=data;renderNetwork(data);startNodeId=data.start_node;goalNodeId=data.goal_node;
+    document.getElementById('metric-total-nodes').textContent=data.num_nodes.toLocaleString();
+    document.getElementById('metric-closures').textContent='0';
+    logEvent('LOADED: '+data.name+' ('+data.num_nodes.toLocaleString()+' nodes, '+data.num_edges.toLocaleString()+' edges)','success');
+    recalculateAndShootout();
+  }).catch(err=>logEvent('Load Error: '+err.message,'alert'));
+}
+
+function renderNetwork(net){
+  roadLayerGroup.clearLayers();markersLayerGroup.clearLayers();disruptionMarkersGroup.clearLayers();edgeIndex=[];
+  if(net.bounds&&net.bounds[0][0]!==net.bounds[1][0])map.fitBounds(net.bounds,{padding:[25,25]});else if(net.center)map.setView(net.center,13);
+  const nLookup={};net.nodes.forEach(n=>{nLookup[n.id]=n;});
+  net.edges.forEach(e=>{
+    const u=nLookup[e.u],v=nLookup[e.v];if(!u||!v)return;
+    const s=getEdgeStyle(e);
+    const poly=L.polyline([[u.lat,u.lon],[v.lat,v.lon]],{renderer:canvasRenderer,color:s.color,weight:s.weight,opacity:s.opacity});
+    poly._edgeRef=e;poly.bindTooltip((e.street||'Corridor')+' | '+e.cost+'s | ρ='+e.congestion+' ('+e.terrain+')',{sticky:true});
+    poly.on('click',function(ev){
+      if(L.DomEvent)L.DomEvent.stopPropagation(ev);
+      if(activeTool==='close'){toggleClosure(e.u,e.v);logEvent('🚧 Corridor ('+e.u+'↔'+e.v+') toggled via direct click!','warn');}
+      else if(activeTool==='hazard'){injectHazard(e.u,e.v);logEvent('☣️ Hazmat injected on corridor ('+e.u+'↔'+e.v+')!','warn');}
+    });
+    roadLayerGroup.addLayer(poly);
+    edgeIndex.push({u:e.u,v:e.v,lat1:u.lat,lon1:u.lon,lat2:v.lat,lon2:v.lon});
+  });
+  const sr=net.nodes.length>5000?0.03:0.12;
+  net.nodes.forEach(n=>{
+    if(n.is_depot||n.is_hospital||Math.random()<sr){
+      const c=L.circleMarker([n.lat,n.lon],{radius:n.is_depot||n.is_hospital?7:3.5,fillColor:n.is_depot?'#00e5ff':(n.is_hospital?'#00ff88':'#64748b'),color:'#fff',weight:1.5,opacity:0.9,fillOpacity:0.85});
+      c.bindTooltip('Node '+n.id+': '+(n.label||'Intersection'));markersLayerGroup.addLayer(c);
+    }
+  });
+  updateEndpointMarkers();
+}
+
+function getEdgeStyle(e){
+  if(!e.is_open)return{color:'#ef4444',weight:5.5,opacity:1.0};
+  if(e.is_hazard)return{color:'#fbbf24',weight:4,opacity:0.95};
+  const rho=e.congestion||0;
+  if(rho>=0.6)return{color:'#ef4444',weight:3.8,opacity:0.9};
+  if(rho>=0.25)return{color:'#f59e0b',weight:2.8,opacity:0.75};
+  if(e.terrain==='highway')return{color:'#00c3ff',weight:3,opacity:0.8};
+  if(e.terrain==='arterial')return{color:'#38bdf8',weight:2.2,opacity:0.65};
+  return{color:'#334155',weight:1.6,opacity:0.5};
+}
+
+function refreshEdgesStatus(){
+  fetch('/api/edges_status').then(r=>r.json()).then(data=>{
+    const em={};data.edges.forEach(e=>{em[e.u+'_'+e.v]=e;});
+    roadLayerGroup.eachLayer(l=>{if(l._edgeRef){const u=em[l._edgeRef.u+'_'+l._edgeRef.v];if(u){l._edgeRef.congestion=u.congestion;l._edgeRef.cost=u.cost;l._edgeRef.is_open=u.is_open;l._edgeRef.is_hazard=u.is_hazard;const s=getEdgeStyle(l._edgeRef);l.setStyle({color:s.color,weight:s.weight,opacity:s.opacity});}}});
+  });
+}
+
+function updateEndpointMarkers(){
+  markersLayerGroup.eachLayer(l=>{if(l._isEndpointMarker)markersLayerGroup.removeLayer(l);});
+  if(!currentNetwork)return;const nL={};currentNetwork.nodes.forEach(n=>{nL[n.id]=n;});
+  if(startNodeId!==null&&nL[startNodeId]){const sn=nL[startNodeId];const m=L.circleMarker([sn.lat,sn.lon],{radius:11,fillColor:'#00ff88',color:'#fff',weight:3.5,fillOpacity:0.95}).bindPopup('<b>🚑 Origin</b><br>Node '+startNodeId);m._isEndpointMarker=true;markersLayerGroup.addLayer(m);}
+  if(goalNodeId!==null&&nL[goalNodeId]){const gn=nL[goalNodeId];const m=L.circleMarker([gn.lat,gn.lon],{radius:11,fillColor:'#ef4444',color:'#fff',weight:3.5,fillOpacity:0.95}).bindPopup('<b>🚨 Destination</b><br>Node '+goalNodeId);m._isEndpointMarker=true;markersLayerGroup.addLayer(m);}
+}
+
+function recalculateAndShootout(){
+  if(startNodeId===null||goalNodeId===null)return;
+  fetch('/api/compare_routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_id:startNodeId,goal_id:goalNodeId})}).then(r=>r.json()).then(res=>{
+    const severedBanner=document.getElementById('route-severed-banner');
+    const hzBanner=document.getElementById('hazmat-alert-banner');
+    const hzBtn=document.getElementById('btn-dispatch-mission');
+
+    if(!res.success){
+      logEvent('🚫 ROUTE SEVERED: Destination unreachable under active road closures (Invariant I1 strictly upheld).','alert');
+      biRouteLayerGroup.clearLayers();
+      astarRouteLayerGroup.clearLayers();
+      dijkstraRouteLayerGroup.clearLayers();
+      frontierLayerGroup.clearLayers();
+      latestShootoutData=null;
+
+      if(severedBanner){
+        severedBanner.style.display='flex';
+        const el=document.getElementById('severed-dest-node');
+        if(el)el.textContent=goalNodeId;
+      }
+      if(hzBanner)hzBanner.style.display='none';
+      if(hzBtn){
+        hzBtn.innerHTML='🚫 Path Severed';
+        hzBtn.disabled=true;
+      }
+      document.getElementById('algo-badge').textContent='BLOCKED (NO PATH)';
+      document.getElementById('algo-badge').style.color='var(--accent-red)';
+      document.getElementById('metric-latency').textContent='N/A';
+      document.getElementById('metric-expanded').textContent='--';
+      document.getElementById('metric-pruned').textContent='0.0%';
+      document.getElementById('metric-cost').textContent='SEVERED (∞)';
+      document.getElementById('divergence-display').textContent='Divergence: N/A';
+
+      const tbody=document.getElementById('comp-table-body');
+      tbody.innerHTML=`
+        <tr><td><span class="badge-algo badge-dijkstra">Dijkstra</span></td><td>--</td><td>--</td><td style="color:var(--accent-red);font-weight:700">UNREACHABLE</td><td>--</td></tr>
+        <tr><td><span class="badge-algo badge-astar">Weighted A*</span></td><td>--</td><td>--</td><td style="color:var(--accent-red);font-weight:700">UNREACHABLE</td><td>--</td></tr>
+        <tr class="highlight"><td><span class="badge-algo badge-bi">Bidir A*</span></td><td>--</td><td>--</td><td style="color:var(--accent-red);font-weight:700">UNREACHABLE</td><td>--</td></tr>
+      `;
+      document.getElementById('waypoint-count').textContent='0 waypoints';
+      const mc=document.getElementById('street-manifest');
+      mc.innerHTML='<div class="manifest-item"><span style="color:var(--accent-red)">⚠️ All corridors to destination are walled by active closures.</span></div>';
+      return;
+    }
+
+    if(severedBanner)severedBanner.style.display='none';
+    if(hzBtn)hzBtn.disabled=false;
+    document.getElementById('algo-badge').style.color='var(--accent-green)';
+    latestShootoutData=res;
+    const divD=document.getElementById('divergence-display');if(res.path_divergence_pct!==undefined)divD.textContent='Divergence: '+res.path_divergence_pct+'%';
+    const tbody=document.getElementById('comp-table-body');tbody.innerHTML='';
+    let dR=null,aR=null,bR=null;
+    res.comparison.forEach(row=>{
+      const tr=document.createElement('tr');let bc='badge-astar';
+      if(row.key==='dijkstra'){bc='badge-dijkstra';dR=row;}else if(row.key==='bi_astar'){bc='badge-bi';tr.className='highlight';bR=row;}else{aR=row;}
+      const cs=row.cost_seconds>=0?row.cost_seconds.toFixed(0)+'s':'N/A';
+      tr.innerHTML='<td><span class="badge-algo '+bc+'">'+row.name.split('(')[0].trim()+'</span></td><td>'+row.time_ms.toFixed(2)+' ms</td><td>'+row.nodes_expanded.toLocaleString()+'</td><td>'+cs+'</td><td style="color:var(--accent-cyan);font-weight:700">'+row.speedup.toFixed(1)+'x</td>';
+      tr.addEventListener('click',()=>focusAlgorithm(row.key));tbody.appendChild(tr);
+    });
+    const best=bR||aR||dR;
+    document.getElementById('algo-badge').textContent=best.name.toUpperCase();
+    document.getElementById('metric-latency').textContent=best.time_ms.toFixed(2)+' ms';
+    document.getElementById('metric-expanded').textContent=best.nodes_expanded.toLocaleString();
+    document.getElementById('metric-pruned').textContent=best.pruned_pct.toFixed(1)+'%';
+    document.getElementById('metric-cost').textContent=best.cost_seconds.toFixed(1)+' s';
+    renderComparativeRoutes(dR,aR,bR);renderFrontierClouds(dR,aR,bR);
+    const wCost=aR?aR.cost_seconds:0,oCost=bR?bR.cost_seconds:0;
+    const costDiff=wCost>0&&oCost>0?((wCost/oCost-1)*100).toFixed(1):'0.0';
+    logEvent('⚡ Bidir '+bR.speedup.toFixed(1)+'x speedup, pruned '+bR.pruned_pct.toFixed(1)+'%. W-A* diverges '+(res.path_divergence_pct||0)+'% (+'+costDiff+'% cost).','success');
+
+    // HazMat Corridor Traversal Evaluation & Mission Control Gear Notification
+    if (res.hazmat_status && res.hazmat_status.has_hazmat) {
+      hzBanner.style.display = 'flex';
+      document.getElementById('hazmat-alert-title').textContent = '☣️ ' + res.hazmat_status.severity_level;
+      const sitesCount = res.hazmat_status.incident_sites_count || res.hazmat_status.count || 1;
+      const segsCount = res.hazmat_status.segments_count || 0;
+      const siteWord = sitesCount === 1 ? '1 INCIDENT SITE' : sitesCount + ' INCIDENT SITES';
+      const segWord = segsCount > 1 ? ' (' + segsCount + ' SEGMENTS)' : '';
+      document.getElementById('hazmat-count-badge').textContent = siteWord + segWord;
+      document.getElementById('hazmat-alert-desc').textContent = res.hazmat_status.crew_directive + ' (Affects: ' + (res.hazmat_status.affected_streets.join(', ') || 'Corridor') + ')';
+      document.getElementById('hazmat-alert-gear').textContent = '🦺 CREW DIRECTIVE: ' + res.hazmat_status.ppe_gear;
+      
+      if (res.hazmat_status.severity_code >= 3) {
+        hzBanner.style.borderColor = '#ef4444';
+        document.getElementById('hazmat-alert-title').style.color = '#ef4444';
+      } else if (res.hazmat_status.severity_code === 2) {
+        hzBanner.style.borderColor = '#f97316';
+        document.getElementById('hazmat-alert-title').style.color = '#f97316';
+      } else {
+        hzBanner.style.borderColor = '#f59e0b';
+        document.getElementById('hazmat-alert-title').style.color = '#fbbf24';
+      }
+      hzBtn.innerHTML = '🚑 Dispatch (☣️ ' + (res.hazmat_status.severity_code === 3 ? 'Level A' : (res.hazmat_status.severity_code === 2 ? 'SCBA' : 'PPE')) + ' Equipped)';
+      logEvent('☣️ HAZMAT NOTIFICATION [' + res.hazmat_status.severity_level + ']: ' + siteWord + segWord + ' on route. Order: Don ' + res.hazmat_status.ppe_gear, 'alert');
+    } else {
+      hzBanner.style.display = 'none';
+      hzBtn.innerHTML = '🚑 Dispatch';
+    }
+  });
+  fetch('/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_id:startNodeId,goal_id:goalNodeId,algorithm:'bi_astar'})}).then(r=>r.json()).then(r=>{
+    if(r.success){document.getElementById('waypoint-count').textContent=r.total_waypoints+' waypoints';const mc=document.getElementById('street-manifest');mc.innerHTML='';(r.streets||[]).forEach((st,i)=>{const it=document.createElement('div');it.className='manifest-item';it.innerHTML='<span>'+(i+1)+'. '+st+'</span><span style="color:var(--accent-green)">&bull;</span>';mc.appendChild(it);});}
+  });
+}
+
+function renderComparativeRoutes(dD,aD,bD){
+  dijkstraRouteLayerGroup.clearLayers();astarRouteLayerGroup.clearLayers();biRouteLayerGroup.clearLayers();
+  if(dD&&dD.path_coords&&dD.path_coords.length>0){const p=L.polyline(dD.path_coords,{color:'#f59e0b',weight:4.5,opacity:0.8,dashArray:'8,6'});p.bindTooltip('<b>Dijkstra</b><br>Cost: '+dD.cost_seconds+'s | Exp: '+dD.nodes_expanded,{sticky:true});dijkstraRouteLayerGroup.addLayer(p);}
+  if(aD&&aD.path_coords&&aD.path_coords.length>0){const p=L.polyline(aD.path_coords,{color:'#00e5ff',weight:5,opacity:0.88,dashArray:'12,6'});p.bindTooltip('<b>Weighted A* (ε=2.5)</b><br>Cost: '+aD.cost_seconds+'s | Greedy shortcut',{sticky:true});astarRouteLayerGroup.addLayer(p);}
+  if(bD&&bD.path_coords&&bD.path_coords.length>0){const p=L.polyline(bD.path_coords,{color:'#00ff88',weight:5.5,opacity:0.95,lineCap:'round',lineJoin:'round'});p.bindTooltip('<b>⭐ Bidir A* Optimal</b><br>Cost: '+bD.cost_seconds+'s',{sticky:true});biRouteLayerGroup.addLayer(p);}
+}
+
+function renderFrontierClouds(dD,aD,bD){
+  frontierLayerGroup.clearLayers();
+  if(dD&&dD.explored_coords)dD.explored_coords.forEach(c=>{frontierLayerGroup.addLayer(L.circleMarker(c,{renderer:canvasRenderer,radius:3,fillColor:'#fbbf24',fillOpacity:0.5,stroke:false}));});
+  if(aD&&aD.explored_coords)aD.explored_coords.forEach(c=>{frontierLayerGroup.addLayer(L.circleMarker(c,{renderer:canvasRenderer,radius:3,fillColor:'#00e5ff',fillOpacity:0.7,stroke:false}));});
+}
+
+function focusAlgorithm(key){
+  if(!latestShootoutData)return;const f=latestShootoutData.comparison.find(c=>c.key===key);if(!f)return;
+  document.getElementById('algo-badge').textContent=f.name.toUpperCase();
+  document.getElementById('metric-latency').textContent=f.time_ms.toFixed(2)+' ms';
+  document.getElementById('metric-expanded').textContent=f.nodes_expanded.toLocaleString();
+  document.getElementById('metric-pruned').textContent=f.pruned_pct.toFixed(1)+'%';
+  document.getElementById('metric-cost').textContent=f.cost_seconds.toFixed(1)+' s';
+}
+
+function toggleClosure(u,v){
+  fetch('/api/closure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({u:u,v:v})}).then(r=>r.json()).then(d=>{
+    const stLabel=d.corridor_street||('Corridor '+u+'↔'+v);
+    const segCount=d.affected_edges?d.affected_edges.length:1;
+    logEvent('🚧 '+(d.is_open?'REOPENED':'CLOSED')+': '+stLabel+' ('+segCount+' segment'+(segCount>1?'s':'')+'). Total Closures: '+d.active_closures_count,'alert');
+    document.getElementById('metric-closures').textContent=d.active_closures_count;
+
+    if(d.affected_edges){
+      d.affected_edges.forEach(ae=>{
+        disruptionMarkersGroup.eachLayer(l=>{
+          if(l._closureRef===ae.u+'_'+ae.v||l._closureRef===ae.v+'_'+ae.u)disruptionMarkersGroup.removeLayer(l);
+        });
+      });
+    }else{
+      disruptionMarkersGroup.eachLayer(l=>{if(l._closureRef===u+'_'+v||l._closureRef===v+'_'+u)disruptionMarkersGroup.removeLayer(l);});
+    }
+
+    if(!d.is_open){
+      const edge=edgeIndex.find(e=>e.u===u&&e.v===v)||(d.affected_edges&&d.affected_edges.length?edgeIndex.find(e=>e.u===d.affected_edges[0].u&&e.v===d.affected_edges[0].v):null);
+      if(edge){
+        const m=L.circleMarker([(edge.lat1+edge.lat2)/2,(edge.lon1+edge.lon2)/2],{radius:9,fillColor:'#ef4444',color:'#fff',weight:2.5,fillOpacity:0.95}).bindTooltip('🚧 BLOCK CLOSED: '+stLabel);
+        m._closureRef=u+'_'+v;
+        disruptionMarkersGroup.addLayer(m);
+      }
+    }
+    refreshEdgesStatus();
+    recalculateAndShootout();
+  });
+}
+
+function injectHazard(u,v){
+  fetch('/api/hazard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({u:u,v:v,penalty:60})}).then(r=>r.json()).then(d=>{
+    const stLabel=d.corridor_street||('Corridor '+u+'↔'+v);
+    logEvent('☣️ HAZMAT on '+stLabel+' [+60s/segment]. Hazards: '+d.active_hazards_count,'warn');
+    const edge=edgeIndex.find(e=>e.u===u&&e.v===v)||(d.affected_edges&&d.affected_edges.length?edgeIndex.find(e=>e.u===d.affected_edges[0].u&&e.v===d.affected_edges[0].v):null);
+    if(edge){
+      const m=L.circleMarker([(edge.lat1+edge.lat2)/2,(edge.lon1+edge.lon2)/2],{radius:9,fillColor:'#fbbf24',color:'#fff',weight:2.5,fillOpacity:0.95}).bindTooltip('☣️ HAZMAT BLOCK: '+stLabel+' (+60s)');
+      m._hazardRef=u+'_'+v;
+      disruptionMarkersGroup.addLayer(m);
+    }
+    refreshEdgesStatus();
+    recalculateAndShootout();
+  });
+}
+
+function animateVehicleMission(){
+  if(startNodeId===null||goalNodeId===null||isVehicleAnimating)return;
+  fetch('/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_id:startNodeId,goal_id:goalNodeId,algorithm:'bi_astar'})}).then(r=>r.json()).then(res=>{
+    if(!res.success)return;isVehicleAnimating=true;logEvent('DISPATCH: Unit en route to Node '+goalNodeId+'...','warn');
+    const coords=res.path_coords;let idx=0;
+    if(!vehicleMarker){vehicleMarker=L.marker(coords[0],{icon:L.divIcon({className:'vehicle-marker-pulse',iconSize:[22,22]})}).addTo(map);}else vehicleMarker.setLatLng(coords[0]);
+    const iv=Math.max(80,Math.min(250,4000/coords.length));
+    const tmr=setInterval(()=>{if(idx<coords.length){vehicleMarker.setLatLng(coords[idx]);idx++;}else{clearInterval(tmr);isVehicleAnimating=false;logEvent('MISSION COMPLETE at Node '+goalNodeId+'!','success');}},iv);
+  });
+}
+
+function setupWeatherCanvas(){
+  const canvas=document.getElementById('weather-canvas'),ctx=canvas.getContext('2d');
+  function resize(){canvas.width=canvas.parentElement.clientWidth;canvas.height=canvas.parentElement.clientHeight;}
+  window.addEventListener('resize',resize);resize();
+  particles=[];for(let i=0;i<120;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,len:10+Math.random()*15,speed:3+Math.random()*5,radius:1.5+Math.random()*2.5,drift:-1+Math.random()*2});
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(weatherType==='rain'){ctx.strokeStyle='rgba(56,189,248,.55)';ctx.lineWidth=1.5;ctx.beginPath();for(let p of particles){ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-4,p.y+p.len);p.y+=p.speed*2.2;p.x-=1;if(p.y>canvas.height){p.y=-20;p.x=Math.random()*canvas.width;}}ctx.stroke();}
+    else if(weatherType==='snow'){ctx.fillStyle='rgba(241,245,249,.75)';for(let p of particles){ctx.beginPath();ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);ctx.fill();p.y+=p.speed*.4;p.x+=Math.sin(p.y*.03)*.8;if(p.y>canvas.height){p.y=-10;p.x=Math.random()*canvas.width;}}}
+    weatherAnimationId=requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function updateWeatherVisuals(w){
+  const banner=document.getElementById('weather-banner'),icon=document.getElementById('weather-banner-icon'),text=document.getElementById('weather-banner-text');
+  if(w==='clear'){icon.textContent='☀️';text.textContent='CLEAR: Balanced terrain costs. All roads at baseline.';banner.style.borderColor='var(--border-color)';}
+  else if(w==='rain'){icon.textContent='🌧️';text.textContent='RAIN: Alleys flood (+90%), offroad mud (+150%). Highways drain well.';banner.style.borderColor='rgba(56,189,248,.6)';}
+  else if(w==='fog'){icon.textContent='🌫️';text.textContent='FOG: Highway visibility ↓ (+80% penalty). Urban streets sheltered.';banner.style.borderColor='rgba(179,136,255,.6)';}
+  else if(w==='snow'){icon.textContent='❄️';text.textContent='BLIZZARD: Highways icy (+80%), offroad impassable. Alleys sheltered.';banner.style.borderColor='rgba(0,229,255,.8)';}
+}
+
+function logEvent(text,type){
+  type=type||'normal';const feed=document.getElementById('mission-log-feed');const now=new Date();
+  const ts='['+now.toTimeString().split(' ')[0]+'.'+Math.floor(now.getMilliseconds()/100)+']';
+  const en=document.createElement('div');en.className='log-entry '+type;en.innerHTML='<div class="log-time">'+ts+'</div><div>'+text+'</div>';
+  feed.prepend(en);while(feed.children.length>50)feed.removeChild(feed.lastChild);
+}
+
+window.addEventListener('DOMContentLoaded',()=>initMap());
+</script>
+</body>
+</html>
