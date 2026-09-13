@@ -11,7 +11,7 @@
 
 ### August 3, 2026
 
-Kickoff day. Sparsh and I threw around three or four project ideas before landing on a dispatch/routing simulation - it appealed to me mainly because it let us actually implement algorithms from class (Dijkstra, A*, an assignment problem) instead of just discussing them. I put together the skeleton of the introduction PPT tonight: problem, why it's hard, what we're building. Named it AetherGrid AI.
+Sparsh and I threw around three or four project ideas before landing on a dispatch/routing simulation - it appealed to me mainly because it let us actually implement algorithms from class (Dijkstra, A*, an assignment problem) instead of just discussing them. I put together the skeleton of the introduction PPT tonight: problem, why it's hard, what we're building. Named it AetherGrid AI.
 
 ### August 12, 2026
 
