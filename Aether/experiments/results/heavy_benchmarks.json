@@ -1,0 +1,251 @@
+{
+  "timestamp": "2026-09-13T16:17:20Z",
+  "suite": "AetherGrid Heavy-Duty Multi-Scale Benchmark",
+  "topologies": {
+    "Grid_16x16": {
+      "nodes": 256,
+      "edges": 960,
+      "shootout": {
+        "Dijkstra": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 346.5142775253989,
+          "latency_p50_ms": 2.8389390208758414,
+          "latency_p90_ms": 4.908330558100715,
+          "latency_p95_ms": 5.206483032088725,
+          "latency_p99_ms": 5.571987074799836,
+          "latency_mean_ms": 2.8460202602824816,
+          "latency_std_ms": 1.552849368020629,
+          "latency_max_ms": 5.762850982137024,
+          "mean_nodes_expanded": 119.18666666666667,
+          "mean_path_length": 11.186666666666667,
+          "peak_memory_kb": 65.53125
+        },
+        "Dynamic_AStar": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 586.3416704654043,
+          "latency_p50_ms": 1.416971004800871,
+          "latency_p90_ms": 3.215206909226253,
+          "latency_p95_ms": 3.811194759327913,
+          "latency_p99_ms": 4.893905857461499,
+          "latency_mean_ms": 1.6757238004356623,
+          "latency_std_ms": 1.165017040829697,
+          "latency_max_ms": 6.154010014142841,
+          "mean_nodes_expanded": 49.77333333333333,
+          "mean_path_length": 11.186666666666667,
+          "peak_memory_kb": 61.2578125,
+          "speedup_vs_dijkstra": 1.6983826687563668,
+          "search_space_pruned_pct": 58.23917664168251
+        },
+        "Bidirectional_AStar": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 860.9627818450781,
+          "latency_p50_ms": 1.0947845003101975,
+          "latency_p90_ms": 1.8653000122867525,
+          "latency_p95_ms": 2.1387418615631737,
+          "latency_p99_ms": 2.5720665417611586,
+          "latency_mean_ms": 1.116078799823299,
+          "latency_std_ms": 0.5643058685686201,
+          "latency_max_ms": 2.8319369885139167,
+          "mean_nodes_expanded": 26.98,
+          "mean_path_length": 11.133333333333333,
+          "peak_memory_kb": 30.8125,
+          "speedup_vs_dijkstra": 2.5500173112624953,
+          "search_space_pruned_pct": 77.36323973598836
+        }
+      }
+    },
+    "Grid_32x32": {
+      "nodes": 1024,
+      "edges": 3968,
+      "shootout": {
+        "Dijkstra": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 76.91895213564871,
+          "latency_p50_ms": 13.63981849863194,
+          "latency_p90_ms": 21.22415716876276,
+          "latency_p95_ms": 22.051387990359217,
+          "latency_p99_ms": 23.520494750118814,
+          "latency_mean_ms": 12.834295626962557,
+          "latency_std_ms": 6.586979389026311,
+          "latency_max_ms": 24.28239496657625,
+          "mean_nodes_expanded": 542.98,
+          "mean_path_length": 24.68,
+          "peak_memory_kb": 217.640625
+        },
+        "Dynamic_AStar": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 152.32245591520103,
+          "latency_p50_ms": 5.52083901129663,
+          "latency_p90_ms": 13.049129297723994,
+          "latency_p95_ms": 14.96249191986862,
+          "latency_p99_ms": 22.865429016528644,
+          "latency_mean_ms": 6.463623635548477,
+          "latency_std_ms": 4.79126841005287,
+          "latency_max_ms": 23.317558981943876,
+          "mean_nodes_expanded": 224.34666666666666,
+          "mean_path_length": 24.68,
+          "peak_memory_kb": 171.53125,
+          "speedup_vs_dijkstra": 1.9856192672445865,
+          "search_space_pruned_pct": 58.68233329649956
+        },
+        "Bidirectional_AStar": {
+          "queries_executed": 150,
+          "successful_queries": 150,
+          "qps": 226.78746908629054,
+          "latency_p50_ms": 3.642369498265907,
+          "latency_p90_ms": 7.7878981770481905,
+          "latency_p95_ms": 10.027863472350871,
+          "latency_p99_ms": 13.129131072200822,
+          "latency_mean_ms": 4.321888496245568,
+          "latency_std_ms": 2.854397668782813,
+          "latency_max_ms": 14.741315972059965,
+          "mean_nodes_expanded": 115.76,
+          "mean_path_length": 24.6,
+          "peak_memory_kb": 96.1328125,
+          "speedup_vs_dijkstra": 2.9696035976198214,
+          "search_space_pruned_pct": 78.68061438727025
+        }
+      }
+    },
+    "Grid_50x50": {
+      "nodes": 2500,
+      "edges": 9800,
+      "shootout": {
+        "Dijkstra": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 37.353056710616265,
+          "latency_p50_ms": 26.172011508606374,
+          "latency_p90_ms": 51.352190796751536,
+          "latency_p95_ms": 53.30051064956933,
+          "latency_p99_ms": 55.469160462962456,
+          "latency_mean_ms": 26.345033933466766,
+          "latency_std_ms": 16.961596897500435,
+          "latency_max_ms": 56.04280001716688,
+          "mean_nodes_expanded": 1143.425,
+          "mean_path_length": 34.2875,
+          "peak_memory_kb": 499.171875
+        },
+        "Dynamic_AStar": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 74.39862941394199,
+          "latency_p50_ms": 9.720608009956777,
+          "latency_p90_ms": 29.21895948238672,
+          "latency_p95_ms": 37.463151841075145,
+          "latency_p99_ms": 44.776546562206896,
+          "latency_mean_ms": 13.23287675040774,
+          "latency_std_ms": 11.520767589589214,
+          "latency_max_ms": 48.86288003763184,
+          "mean_nodes_expanded": 462.45,
+          "mean_path_length": 34.2875,
+          "peak_memory_kb": 390.4921875,
+          "speedup_vs_dijkstra": 1.9908772998021769,
+          "search_space_pruned_pct": 59.55572075125172
+        },
+        "Bidirectional_AStar": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 109.1463359282689,
+          "latency_p50_ms": 6.85638899449259,
+          "latency_p90_ms": 21.10871406039223,
+          "latency_p95_ms": 28.354726490215395,
+          "latency_p99_ms": 31.67618500359821,
+          "latency_mean_ms": 8.987177199742291,
+          "latency_std_ms": 7.824474731280421,
+          "latency_max_ms": 32.840847969055176,
+          "mean_nodes_expanded": 249.6625,
+          "mean_path_length": 34.2125,
+          "peak_memory_kb": 213.5546875,
+          "speedup_vs_dijkstra": 2.931402524724027,
+          "search_space_pruned_pct": 78.1653803266502
+        }
+      }
+    },
+    "Manhattan_OSM": {
+      "nodes": 1529,
+      "edges": 1974,
+      "shootout": {
+        "Dijkstra": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 96.8100526188408,
+          "latency_p50_ms": 9.998533001635224,
+          "latency_p90_ms": 18.018219067016616,
+          "latency_p95_ms": 18.405353766866025,
+          "latency_p99_ms": 19.25950941687915,
+          "latency_mean_ms": 10.12219660988194,
+          "latency_std_ms": 6.047206604347264,
+          "latency_max_ms": 19.61354399099946,
+          "mean_nodes_expanded": 762.975,
+          "mean_path_length": 56.7375,
+          "peak_memory_kb": 381.625
+        },
+        "Dynamic_AStar": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 110.51806411767676,
+          "latency_p50_ms": 7.969205529661849,
+          "latency_p90_ms": 17.525935900630436,
+          "latency_p95_ms": 19.365857643424533,
+          "latency_p99_ms": 22.939387112273835,
+          "latency_mean_ms": 8.870818209106801,
+          "latency_std_ms": 6.214321972175994,
+          "latency_max_ms": 23.056442965753376,
+          "mean_nodes_expanded": 542.5,
+          "mean_path_length": 56.7375,
+          "peak_memory_kb": 378.9609375,
+          "speedup_vs_dijkstra": 1.1410668521524283,
+          "search_space_pruned_pct": 28.896752842491562
+        },
+        "Bidirectional_AStar": {
+          "queries_executed": 80,
+          "successful_queries": 80,
+          "qps": 102.21357643834628,
+          "latency_p50_ms": 8.412189519731328,
+          "latency_p90_ms": 20.408870611572638,
+          "latency_p95_ms": 22.20827476703562,
+          "latency_p99_ms": 25.93416316551154,
+          "latency_mean_ms": 9.609307436767267,
+          "latency_std_ms": 6.784793736742882,
+          "latency_max_ms": 29.024719027802348,
+          "mean_nodes_expanded": 444.1125,
+          "mean_path_length": 56.7375,
+          "peak_memory_kb": 303.9609375,
+          "speedup_vs_dijkstra": 1.0533742079218165,
+          "search_space_pruned_pct": 41.79199842720928
+        }
+      }
+    }
+  },
+  "churn_stress_test": {
+    "Grid_32x32": {
+      "10_closures": {
+        "closure_injection_time_ms": 0.05351804429665208,
+        "mean_reroute_latency_ms": 1.7154227220453322,
+        "p95_reroute_latency_ms": 5.040487361839039,
+        "invariant_i1_violations": 0,
+        "system_resilient": true
+      },
+      "50_closures": {
+        "closure_injection_time_ms": 0.17756200395524502,
+        "mean_reroute_latency_ms": 2.350589040433988,
+        "p95_reroute_latency_ms": 5.673281379858963,
+        "invariant_i1_violations": 0,
+        "system_resilient": true
+      },
+      "100_closures": {
+        "closure_injection_time_ms": 0.29654597165063024,
+        "mean_reroute_latency_ms": 1.9163685594685376,
+        "p95_reroute_latency_ms": 5.510581040289251,
+        "invariant_i1_violations": 0,
+        "system_resilient": true
+      }
+    }
+  }
+}

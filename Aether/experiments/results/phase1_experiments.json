@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-09-13T15:48:52Z",
+  "phase": "01",
+  "experiment_1": {
+    "experiment": "Heuristic Admissibility Bound",
+    "trials_requested": 2500,
+    "tested_pairs": 2462,
+    "reachable_pairs": 2462,
+    "admissibility_violations": 0,
+    "is_admissibility_proven": true,
+    "heuristic_ratio_mean": 0.33837662836808613,
+    "heuristic_ratio_max": 0.8168356083811336,
+    "heuristic_ratio_min": 0.09492427881589095,
+    "elapsed_seconds": 0.4309046780108474
+  },
+  "experiment_2": {
+    "experiment": "EWMA Congestion Filter Damping",
+    "steps": 100,
+    "instantaneous_variance": 0.24000000000000005,
+    "ewma_smoothed_variance": 0.033863114912846555,
+    "variance_reduction_pct": 85.89036878631394,
+    "smoothing_effective": true,
+    "final_ewma_rho": 0.7911259904108322
+  },
+  "experiment_3": {
+    "experiment": "Disruption Detour Latency & Invariant I1",
+    "num_cuts_tested": 30,
+    "successful_reroutes": 30,
+    "i1_violations": 0,
+    "mean_latency_ms": 0.6026290046672026,
+    "max_latency_ms": 0.6643300293944776,
+    "mean_detour_ratio": 1.0,
+    "i1_verified": true
+  }
+}
