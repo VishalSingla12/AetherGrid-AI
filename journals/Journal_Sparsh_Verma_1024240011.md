@@ -41,8 +41,3 @@ Poked at edge cases in the cost function before the demo - specifically what hap
 
 Mid-term demo. I mostly fielded questions about the cost model since that's what I'd been deep in all week. The one thing I want to be clearer about next time is that the deadline penalty in the assignment cost is a soft penalty, not a hard constraint - a couple of people in the room read it as a hard cutoff and I had to backtrack and explain.
 
----
-
-### Reflection
-
-The diagrams didn't feel like busywork this time around - the associative-entity realization for ASSIGNMENT genuinely changed how I ended up structuring state in the prototype code. After the short break ends on October 11, my focus shifts to replacing the prototype's placeholder routing with the full A*/Dijkstra/HPA* suite, and later the Genetic Algorithm VRPTW solver.
