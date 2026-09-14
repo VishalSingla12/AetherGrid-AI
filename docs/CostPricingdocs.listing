@@ -1,0 +1,13 @@
+def test_cost_pricing_exact_formula(self):
+    edge = self.graph.get_edge(0, 1)
+    edge.free_flow_time_seconds = 10.0  # ell_e = 10s
+    edge.terrain = TerrainType.URBAN     # tau_e = 1.45
+    edge.congestion = 0.50               # rho_e = 0.50
+    edge.is_hazard = True
+    edge.hazard_penalty_seconds = 45.0   # beta = 45s
+
+    # Exact arithmetic: dynamic_time = 10.0 * 1.45 * (1.0 + 0.85 * 0.50) * 1.22 = 25.1956 s
+    # total_cost = 25.1956 + 45.0 = 70.1956 s
+    expected_cost = 10.0 * 1.45 * (1.0 + 0.85 * 0.50) * 1.22 + 45.0
+    calculated_cost = calculate_edge_cost(edge, weather_multiplier=1.22, params=CostModelParameters(alpha=0.85))
+    self.assertAlmostEqual(calculated_cost, expected_cost, places=4)

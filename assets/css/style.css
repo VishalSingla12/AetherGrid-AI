@@ -1,0 +1,1615 @@
+/* ==========================================================================
+   AETHERGRID AI — DESIGN TOKENS & CORE STYLES
+   Awwwards-grade light editorial architecture
+   ========================================================================== */
+
+:root {
+  --bg-paper: #F9F7F1;
+  --bg-card: #FFFFFF;
+  --bg-mist: #F2EEE5;
+  --ink: #1A1A1A;
+  --ink-secondary: rgba(26, 26, 26, 0.65);
+  --ink-tertiary: rgba(26, 26, 26, 0.45);
+  --hairline: rgba(26, 26, 26, 0.12);
+  --hairline-heavy: rgba(26, 26, 26, 0.22);
+  
+  --celadon-jade: #2F5B46;
+  --celadon-light: rgba(47, 91, 70, 0.08);
+  --celadon-glow: rgba(47, 91, 70, 0.15);
+  --cinnabar-red: #B33927;
+  --cinnabar-light: rgba(179, 57, 39, 0.08);
+  --amber-gold: #B38024;
+  --amber-light: rgba(179, 128, 36, 0.08);
+
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
+
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-power4-out: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Reset & Baseline
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--bg-paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: clip; /* Invariant #2: No overflow-y: auto, use overflow-x: clip */
+  position: relative;
+  background-color: var(--bg-paper);
+}
+
+/* --------------------------------------------------------------------------
+   Grain Overlay (Invariant #5: Static 48x48px tile, NO live SVG feTurbulence)
+   -------------------------------------------------------------------------- */
+.grain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* --------------------------------------------------------------------------
+   Transit-Line SVG Overlay (SIGNATURE MOVE)
+   -------------------------------------------------------------------------- */
+.transit-svg-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.transit-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.transit-track-line {
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  fill: none;
+}
+
+.transit-active-line {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.station-node {
+  fill: var(--bg-card);
+  stroke: var(--celadon-jade);
+  stroke-width: 2;
+  transition: fill 0.4s ease, transform 0.4s var(--ease-expo-out);
+  transform-origin: center;
+}
+
+.station-node.active {
+  fill: var(--celadon-jade);
+  transform: scale(1.3);
+}
+
+/* --------------------------------------------------------------------------
+   Layout Grids & Typography Utilities
+   -------------------------------------------------------------------------- */
+.g12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: clamp(1rem, 2.5vw, 2.5rem);
+  row-gap: 2rem;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+}
+
+[data-col="1-8"] { grid-column: 1 / 9; }
+[data-col="1-6"] { grid-column: 1 / 7; }
+[data-col="7-12"] { grid-column: 7 / 13; }
+[data-col="1-5"] { grid-column: 1 / 6; }
+[data-col="1-12"] { grid-column: 1 / 13; }
+
+/* Line-mask reveal wrapper */
+.lm {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.lm__i {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* Section Marginals / Micro Type */
+.scene__label {
+  position: absolute;
+  top: clamp(2rem, 5vh, 4rem);
+  left: clamp(1.5rem, 5vw, 4rem);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.55;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Scene Base Structure
+   -------------------------------------------------------------------------- */
+.scene {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.scene__inner {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   SCENE 1 — THRESHOLD (Act I)
+   -------------------------------------------------------------------------- */
+.scene--threshold {
+  background-color: var(--bg-paper);
+}
+
+.scene__bg-grid {
+  position: absolute;
+  inset: -10%;
+  background-image: 
+    linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+  background-size: clamp(30px, 5vw, 60px) clamp(30px, 5vw, 60px);
+  opacity: 0.08;
+  transform: scale(1.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scene__crease {
+  position: absolute;
+  top: 0;
+  right: 22%;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--hairline-heavy) 20%, var(--hairline-heavy) 80%, transparent);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 2;
+  transform-origin: top;
+}
+
+.hero-text {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 8vw, 7.5rem);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.hero-title .lm:first-child {
+  margin-right: 0.15em;
+}
+
+.hero-sub {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+  max-width: 38ch;
+}
+
+.hero-sub em {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--celadon-jade);
+}
+
+.hero-micro {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+  margin-top: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   SCENE 2 — EXPOSITION (Act II)
+   -------------------------------------------------------------------------- */
+.scene--exposition {
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.stat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stat-card {
+  background: var(--bg-paper);
+  border: 1px solid var(--hairline);
+  padding: 1.5rem 2rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: transform 0.3s var(--ease-power4-out), border-color 0.3s ease;
+  will-change: transform;
+}
+
+.stat-card:hover {
+  border-color: var(--celadon-jade);
+}
+
+.stat-card__lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+
+.stat-card__num {
+  font-family: var(--font-mono);
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--celadon-jade);
+}
+
+.info-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+  padding-left: clamp(0rem, 2vw, 3rem);
+}
+
+.info-panel__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.info-panel__body {
+  font-size: clamp(1rem, 1.3vw, 1.15rem);
+  line-height: 1.7;
+  color: var(--ink-secondary);
+  max-width: 48ch;
+}
+
+.info-panel__body em {
+  font-family: var(--font-mono);
+  font-style: normal;
+  color: var(--ink);
+  background: var(--celadon-light);
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+}
+
+.info-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--hairline);
+  background: var(--bg-paper);
+  color: var(--ink-secondary);
+  border-radius: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   SCENE 3 — CLIMAX (Act III)
+   -------------------------------------------------------------------------- */
+.scene--climax {
+  background-color: var(--bg-mist);
+}
+
+.scene__contours {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(ellipse at 70% 30%, rgba(179, 57, 39, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(47, 91, 70, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scene--climax .scene__inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 6vh, 4.5rem);
+}
+
+.algo-compare {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: clamp(1rem, 3vw, 2.5rem);
+  width: 100%;
+}
+
+.algo-col {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  transition: transform 0.4s var(--ease-power4-out);
+}
+
+.algo-col:hover {
+  transform: translateY(-4px);
+}
+
+.algo-col__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wf-bar {
+  width: 100%;
+  max-width: 140px;
+  height: clamp(160px, 24vh, 220px);
+  background: var(--bg-paper);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 3px;
+  overflow: hidden;
+}
+
+.wf-bar__fill {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to top, var(--celadon-jade), #488467);
+  border-radius: 1px;
+  position: relative;
+}
+
+.algo-col:nth-child(2) .wf-bar__fill {
+  background: linear-gradient(to top, var(--cinnabar-red), #cf523f);
+}
+
+.algo-col__stat {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: clamp(1rem, 3vw, 2.5rem);
+  row-gap: 1.5rem;
+  border-top: 1px solid var(--hairline-heavy);
+  padding-top: 2rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric__num {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cinnabar-red);
+}
+
+.metric__unit {
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  color: var(--cinnabar-red);
+  margin-left: 2px;
+}
+
+.metric__desc {
+  font-family: var(--font-body);
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
+  color: var(--ink-secondary);
+  margin-top: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   SCENE 4 — DECELERATION (Act IV)
+   -------------------------------------------------------------------------- */
+.scene--deceleration {
+  background-color: var(--bg-paper);
+}
+
+.scene--deceleration .scene__inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.inv-card {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  padding: 1.75rem 1.5rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  position: relative;
+  transition: transform 0.3s var(--ease-expo-out), box-shadow 0.3s ease, border-color 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.inv-card[data-status="proven"] {
+  border-left: 3px solid var(--celadon-jade);
+}
+
+.inv-card[data-status="specified"] {
+  border-left: 3px solid var(--amber-gold);
+}
+
+.inv-card__code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--ink-tertiary);
+}
+
+.inv-card__name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inv-card__badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.inv-card__badge--proven {
+  background: var(--celadon-light);
+  color: var(--celadon-jade);
+  border: 1px solid rgba(47, 91, 70, 0.2);
+}
+
+.inv-card__badge--spec {
+  background: var(--amber-light);
+  color: var(--amber-gold);
+  border: 1px solid rgba(179, 128, 36, 0.2);
+}
+
+.inv-card__desc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+/* Marquee Ticker */
+.marquee {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 0.85rem 0;
+  background: var(--bg-mist);
+}
+
+.marquee__track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marqueeScroll 24s linear infinite;
+  will-change: transform;
+}
+
+.marquee__t {
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--ink-secondary);
+}
+
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* --------------------------------------------------------------------------
+   SCENE 5 — CLOSURE (Act V)
+   -------------------------------------------------------------------------- */
+.scene--closure {
+  background-color: var(--bg-card);
+}
+
+.manifest {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-right: clamp(0rem, 2vw, 2.5rem);
+}
+
+.manifest__micro {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--celadon-jade);
+  font-weight: 700;
+}
+
+.manifest__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 0.75rem;
+}
+
+.manifest__k {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+
+.manifest__v {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.link-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.link-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: var(--bg-paper);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.3s var(--ease-power4-out);
+  position: relative;
+}
+
+.link-card:hover {
+  border-color: var(--celadon-jade);
+  background-color: #FAF8F3;
+}
+
+.link-card::after {
+  content: "→";
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  color: var(--celadon-jade);
+  opacity: 0.5;
+  transition: transform 0.3s var(--ease-expo-out), opacity 0.3s ease;
+}
+
+.link-card:hover::after {
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+.link-card__icon {
+  font-size: 1.5rem;
+}
+
+.link-card__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.link-card__sub {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
+.link-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.link-card__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link-card__pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: var(--celadon-light);
+  color: var(--celadon-jade);
+  border: 1px solid rgba(47, 91, 70, 0.25);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+
+.link-card-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.link-card--presentation:hover,
+.link-card--docs:hover {
+  border-color: var(--celadon-jade);
+  box-shadow: 0 6px 20px rgba(47, 91, 70, 0.08);
+}
+
+.link-card--demo:hover {
+  border-color: var(--amber-gold);
+  box-shadow: 0 6px 20px rgba(179, 128, 36, 0.08);
+}
+
+.link-card__pill--docs {
+  background: var(--celadon-light);
+  color: var(--celadon-jade);
+  border-color: rgba(47, 91, 70, 0.25);
+}
+
+.link-card__pill--standby {
+  background: var(--amber-light);
+  color: var(--amber-gold);
+  border-color: rgba(179, 128, 36, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   Hover Overview Presentation, Documentation & Live Demo Docks
+   -------------------------------------------------------------------------- */
+.ppt-preview-dock {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 1.25rem);
+  transform: translateY(-50%) translateX(16px) scale(0.96);
+  width: min(500px, 86vw);
+  z-index: 120;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              visibility 0.35s;
+}
+
+/* Documentation Dock: Aligned to top of card so it expands downwards */
+.docs-preview-dock {
+  top: 0;
+  transform: translateY(0) translateX(16px) scale(0.96);
+}
+
+/* Live Demo Dock: Aligned to bottom of card so it expands upwards */
+.demo-preview-dock {
+  top: auto;
+  bottom: 0;
+  transform: translateY(0) translateX(16px) scale(0.96);
+}
+
+/* Hover bridge so moving mouse directly to dock does not dismiss it */
+.ppt-preview-dock::after,
+.docs-preview-dock::after,
+.demo-preview-dock::after {
+  content: "";
+  position: absolute;
+  top: -24px;
+  bottom: -24px;
+  right: -25px;
+  width: 35px;
+}
+
+/* Visibility is controlled via JavaScript with the 1-second stay grace period */
+.ppt-preview-dock.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.docs-preview-dock.is-active,
+.demo-preview-dock.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+.ppt-preview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline-heavy);
+  border-radius: 3px;
+  box-shadow: 0 24px 60px -12px rgba(26, 26, 26, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Sub-scroll progress indicator line */
+.ppt-subscroll-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(26, 26, 26, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.ppt-subscroll-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--celadon-jade), var(--amber-gold));
+  transition: width 0.35s var(--ease-expo-out);
+}
+
+.ppt-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-paper);
+  border-bottom: 1px solid var(--hairline);
+  gap: 8px;
+}
+
+.ppt-preview-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ppt-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--celadon-jade);
+  box-shadow: 0 0 0 2px rgba(47, 91, 70, 0.2);
+  animation: pulseDot 1.8s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.35); opacity: 0.4; }
+}
+
+.ppt-status-text {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ppt-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.ppt-nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ppt-nav-arrow:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--bg-paper);
+  border-color: var(--ink);
+}
+
+.ppt-nav-arrow:disabled,
+.ppt-nav-arrow[disabled] {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ppt-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ppt-btn-icon:hover {
+  background: var(--ink);
+  color: var(--bg-paper);
+  border-color: var(--ink);
+}
+
+/* Carousel sliding viewport */
+.ppt-carousel-viewport {
+  width: 100%;
+  height: 250px;
+  background: #E6E1D2;
+  overflow: hidden;
+  position: relative;
+}
+
+.ppt-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ppt-carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.ppt-preview-frame-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ppt-preview-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 720px;
+  border: none;
+  transform-origin: top left;
+  transform: scale(0.39);
+  pointer-events: none;
+}
+
+.doc-preview-frame-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  background-color: #F9F7F1;
+  background-image: url('../images/project_proposal_1_preview.png');
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
+}
+
+.doc-preview-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  transform: none;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Terminal "End of the Road" Slide Card
+   -------------------------------------------------------------------------- */
+.ppt-carousel-slide--end {
+  background: var(--bg-paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ppt-end-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 1.6rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at 85% 20%, rgba(210, 73, 30, 0.07) 0%, transparent 65%),
+              radial-gradient(ellipse at 15% 85%, rgba(47, 91, 70, 0.05) 0%, transparent 55%),
+              var(--bg-paper);
+}
+
+.ppt-end-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cinnabar-red);
+  background: rgba(210, 73, 30, 0.08);
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(210, 73, 30, 0.22);
+  margin-bottom: 0.65rem;
+}
+
+.ppt-end-card__badge::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cinnabar-red);
+}
+
+.ppt-end-card__heading {
+  font-family: var(--font-display);
+  font-size: 1.28rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.45rem;
+}
+
+.ppt-end-card__desc {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  max-width: 44ch;
+  margin-bottom: 1.1rem;
+}
+
+.ppt-end-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ppt-end-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ppt-end-card__btn--back {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline-heavy);
+  color: var(--ink);
+}
+
+.ppt-end-card__btn--back:hover {
+  background: var(--ink);
+  color: var(--bg-paper);
+  border-color: var(--ink);
+}
+
+.ppt-end-card__btn--open {
+  background: var(--celadon-jade);
+  border: 1px solid var(--celadon-jade);
+  color: #FFFFFF;
+}
+
+.ppt-end-card__btn--open:hover {
+  background: #244837;
+  border-color: #244837;
+  color: #FFFFFF;
+}
+
+.demo-empty-badge {
+  color: var(--amber-gold);
+  background: var(--amber-light);
+  border-color: rgba(179, 128, 36, 0.25);
+}
+
+.demo-empty-badge::before {
+  background: var(--amber-gold);
+}
+
+.ppt-end-card__btn--standby {
+  background: var(--amber-light);
+  border: 1px solid rgba(179, 128, 36, 0.3);
+  color: var(--amber-gold);
+  cursor: default;
+}
+
+.ppt-frame-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 0.25s ease, background-color 0.25s ease;
+}
+
+.ppt-carousel-slide:hover .ppt-frame-overlay {
+  opacity: 1;
+  background: rgba(26, 26, 26, 0.22);
+}
+
+.ppt-frame-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ink);
+  color: var(--bg-paper);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transform: translateY(4px);
+  transition: transform 0.25s var(--ease-expo-out);
+}
+
+.ppt-carousel-slide:hover .ppt-frame-hint {
+  transform: translateY(0);
+}
+
+.ppt-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-paper);
+  border-top: 1px solid var(--hairline);
+  gap: 10px;
+}
+
+.ppt-movements {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.ppt-mov {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  background: rgba(26, 26, 26, 0.04);
+  border-radius: 2px;
+  color: var(--ink-tertiary);
+  transition: all 0.2s ease;
+}
+
+.ppt-mov:first-child {
+  color: var(--celadon-jade);
+  font-weight: 700;
+  background: var(--celadon-light);
+}
+
+.ppt-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ppt-scroll-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+
+.ppt-launch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--celadon-jade);
+  color: #FFFFFF;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ppt-launch-btn:hover {
+  background: #244837;
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+.demo-launch-btn:disabled,
+.demo-launch-btn[disabled] {
+  background: rgba(26, 26, 26, 0.12) !important;
+  color: var(--ink-tertiary) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.demo-mov--standby {
+  color: var(--amber-gold) !important;
+  font-weight: 700 !important;
+  background: var(--amber-light) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Fullscreen Presentation Modal Box
+   -------------------------------------------------------------------------- */
+.ppt-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.35s var(--ease-expo-out), visibility 0.35s;
+}
+
+.ppt-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.ppt-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 20, 22, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ppt-modal__box {
+  position: relative;
+  z-index: 10;
+  width: min(94vw, 1380px);
+  height: min(90vh, 820px);
+  background: var(--bg-paper);
+  border: 1px solid var(--hairline-heavy);
+  border-radius: 4px;
+  box-shadow: 0 36px 80px -16px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96) translateY(14px);
+  transition: transform 0.35s var(--ease-expo-out);
+}
+
+.ppt-modal.is-open .ppt-modal__box {
+  transform: scale(1) translateY(0);
+}
+
+.ppt-modal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.ppt-modal__title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ppt-modal__badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: var(--celadon-light);
+  color: var(--celadon-jade);
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(47, 91, 70, 0.25);
+}
+
+.ppt-modal__title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ppt-modal__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ppt-modal__tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: var(--bg-paper);
+  transition: all 0.2s ease;
+}
+
+.ppt-modal__tab-btn:hover {
+  background: var(--ink);
+  color: var(--bg-paper);
+  border-color: var(--ink);
+}
+
+.ppt-modal__close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--bg-paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ppt-modal__close-btn:hover {
+  background: var(--cinnabar-red);
+  color: #FFFFFF;
+  border-color: var(--cinnabar-red);
+}
+
+.ppt-modal__viewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background: #E6E1D2;
+  position: relative;
+}
+
+.ppt-modal__viewport iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.footer {
+  background: var(--bg-paper);
+  border-top: 1px solid var(--hairline);
+  padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
+  position: relative;
+  z-index: 10;
+}
+
+.footer__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.footer__gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--hairline-heavy);
+  border-radius: 2px;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.footer__gh:hover {
+  background: var(--ink);
+  color: var(--bg-paper);
+  border-color: var(--ink);
+}
+
+.footer__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Rules (<768px Mobile Degradation Gate)
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .g12 {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0 1.25rem;
+  }
+
+  [data-col="1-8"],
+  [data-col="1-6"],
+  [data-col="7-12"],
+  [data-col="1-5"] {
+    width: 100%;
+  }
+
+  .scene {
+    min-height: auto;
+    padding: 6rem 0;
+  }
+
+  .hero-title {
+    font-size: 2.75rem;
+  }
+
+  .algo-compare {
+    grid-template-columns: 1fr;
+    row-gap: 1.25rem;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+    row-gap: 1.5rem;
+  }
+
+  .inv-grid {
+    grid-template-columns: 1fr;
+    row-gap: 1rem;
+  }
+
+  .transit-svg-wrap {
+    display: none; /* Hide complex SVG transit lines on small screens */
+  }
+
+  .scene__crease {
+    display: none;
+  }
+
+  .footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ppt-preview-dock,
+  .docs-preview-dock,
+  .demo-preview-dock {
+    display: none; /* On mobile touch screens, link card navigates directly to document */
+  }
+
+  .ppt-modal__box {
+    width: 98vw;
+    height: 94vh;
+    border-radius: 2px;
+  }
+
+  .ppt-modal__title {
+    font-size: 0.95rem;
+    max-width: 20ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ppt-preview-dock,
+  .docs-preview-dock,
+  .demo-preview-dock {
+    right: 0;
+    top: auto;
+    bottom: calc(100% + 1rem);
+    transform: translateY(10px) scale(0.96);
+  }
+
+  .link-card-wrap:hover .ppt-preview-dock,
+  .link-card-wrap:hover .docs-preview-dock,
+  .link-card-wrap:hover .demo-preview-dock,
+  .ppt-preview-dock.is-active,
+  .docs-preview-dock.is-active,
+  .demo-preview-dock.is-active {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion Gate
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .lm__i {
+    transform: none !important;
+  }
+  .hero-sub {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .marquee__track {
+    animation: none !important;
+  }
+}

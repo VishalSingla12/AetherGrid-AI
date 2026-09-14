@@ -1,0 +1,1566 @@
+import os
+
+html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherGrid AI — Autonomous Urban Dispatch Architecture (Phase 01 Defense)</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Harmonious Vellum & Alabaster Gallery Light Foundations */
+            --bg-base: #FCFCF9;
+            --bg-surface: #F5F2EB;
+            --bg-surface-elevated: #EDE9DF;
+            --bg-dark: #0A1128;
+            --bg-dark-surface: #101B3B;
+            
+            --ink-black: #0A1128;
+            --ink-deep: #1E2842;
+            --ink-muted: #53607E;
+            --ink-faint: #8E9AB6;
+            --ink-inverse: #FCFCF9;
+            
+            --hairline-light: rgba(10, 17, 40, 0.10);
+            --hairline-strong: rgba(10, 17, 40, 0.20);
+            --hairline-dark: rgba(252, 252, 249, 0.12);
+            
+            /* Aether Semantic Palette */
+            --celadon: #245A44;
+            --celadon-light: #34765C;
+            --celadon-tint: #EBF4EF;
+            
+            --cinnabar: #B33423;
+            --cinnabar-light: #D14532;
+            --cinnabar-tint: #FAF0EE;
+            
+            --amber: #B37B1B;
+            --amber-light: #D49320;
+            --amber-tint: #FAF3E6;
+            
+            --cobalt: #1B4965;
+            --azure: #0047FF;
+            --cobalt-tint: #EBF2F7;
+            
+            --font-display: 'Fraunces', serif;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        /* Reset & Lenis Setup */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html.lenis, html.lenis body {
+            height: auto;
+        }
+        .lenis.lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--ink-black);
+            font-family: var(--font-body);
+            overflow-x: clip; /* Parent Overflow Invariant */
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Subtle Ambient Noise Overlay (Anti-Zip-Bomb Invariant: pure CSS, no feTurbulence) */
+        .ambient-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.025;
+            background-image: radial-gradient(#0A1128 1px, transparent 1px);
+            background-size: 4px 4px;
+        }
+
+        /* Global Typography Rules */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 400;
+            line-height: 1.0;
+            letter-spacing: -0.025em;
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        .micro-tag {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--ink-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .micro-tag::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--celadon);
+        }
+        .micro-tag.cinnabar::before { background: var(--cinnabar); }
+        .micro-tag.amber::before { background: var(--amber); }
+        .micro-tag.azure::before { background: var(--azure); }
+
+        /* Line Mask Reveals */
+        .line-mask-wrap {
+            overflow: hidden;
+            display: block;
+        }
+        .line-mask-inner {
+            display: block;
+            transform: translateY(115%);
+        }
+
+        /* Top Persistent Academic HUD */
+        .academic-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 14px 4vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(252, 252, 249, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--hairline-light);
+            font-size: 11px;
+            font-family: var(--font-mono);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .hud-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .hud-badge {
+            padding: 3px 8px;
+            background: var(--celadon-tint);
+            color: var(--celadon);
+            font-weight: 600;
+            border-radius: 3px;
+            border: 1px solid rgba(36, 90, 68, 0.2);
+        }
+        .hud-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            color: var(--ink-muted);
+        }
+        .live-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--celadon);
+            box-shadow: 0 0 8px var(--celadon);
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+
+        /* Section Containers */
+        section {
+            position: relative;
+            width: 100%;
+        }
+
+        /* ── ACT I: OVERTURE ───────────────────────────────────────────── */
+        .scene-overture {
+            min-height: 100vh;
+            padding: 18vh 4vw 10vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        .overture-meta {
+            margin-bottom: 3vh;
+        }
+        .overture-title {
+            font-size: clamp(3.8rem, 8.8vw, 9.8rem);
+            font-weight: 400;
+            line-height: 0.90;
+            letter-spacing: -0.04em;
+            max-width: 95vw;
+        }
+        .overture-title em {
+            font-style: italic;
+            color: var(--cinnabar);
+            font-family: var(--font-display);
+        }
+        .overture-lead {
+            margin-top: 5vh;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3vw;
+            align-items: flex-end;
+        }
+        .lead-thesis {
+            grid-column: 1 / 8;
+            font-size: clamp(1.2rem, 1.8vw, 1.65rem);
+            line-height: 1.45;
+            color: var(--ink-deep);
+            font-weight: 400;
+        }
+        .lead-authors {
+            grid-column: 9 / 13;
+            border-left: 2px solid var(--hairline-strong);
+            padding-left: 24px;
+        }
+        .author-name {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .author-id {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-muted);
+            margin-bottom: 12px;
+        }
+        .lead-stats-strip {
+            margin-top: 8vh;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--hairline-strong);
+            border-bottom: 1px solid var(--hairline-strong);
+        }
+        .stat-cell {
+            padding: 24px 20px;
+            border-right: 1px solid var(--hairline-light);
+        }
+        .stat-cell:last-child {
+            border-right: none;
+        }
+        .stat-big {
+            font-family: var(--font-mono);
+            font-size: clamp(2rem, 3.8vw, 3.8rem);
+            font-weight: 600;
+            color: var(--cobalt);
+            line-height: 1.0;
+            margin-top: 8px;
+        }
+        .stat-label {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--ink-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* ── ACT II: TOPOLOGY & INVARIANT I1 ────────────────────────────── */
+        .scene-topology {
+            padding: 16vh 4vw;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--hairline-light);
+            border-bottom: 1px solid var(--hairline-light);
+            z-index: 20;
+        }
+        .section-header {
+            margin-bottom: 8vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--hairline-strong);
+            padding-bottom: 24px;
+        }
+        .section-title {
+            font-size: clamp(2.4rem, 5.0vw, 4.8rem);
+            max-width: 65vw;
+        }
+        .grid-12 {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3vw;
+        }
+        .topo-card {
+            background: var(--bg-base);
+            border: 1px solid var(--hairline-light);
+            border-radius: 4px;
+            padding: 36px;
+        }
+        .topo-card.col-5 { grid-column: 1 / 6; }
+        .topo-card.col-7 { grid-column: 6 / 13; }
+        
+        .terrain-matrix {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .terrain-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-surface);
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .terrain-badge {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--celadon);
+        }
+
+        /* Invariant I1 Schematic Visualizer */
+        .invariant-box {
+            background: var(--bg-base);
+            border-left: 4px solid var(--cinnabar);
+            padding: 24px;
+            margin-top: 24px;
+            border-radius: 0 4px 4px 0;
+        }
+        .invariant-title {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--cinnabar);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .schematic-compare {
+            margin-top: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .schematic-col {
+            background: var(--bg-surface);
+            border: 1px solid var(--hairline-light);
+            border-radius: 4px;
+            padding: 20px;
+        }
+        .schematic-col.fail { border-top: 3px solid var(--cinnabar); }
+        .schematic-col.pass { border-top: 3px solid var(--celadon); }
+        .schematic-col h5 {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .schematic-col.fail h5 { color: var(--cinnabar); }
+        .schematic-col.pass h5 { color: var(--celadon); }
+        .schematic-col p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--ink-deep);
+        }
+
+        /* ── ACT III: THE MASTER COST EQUATION (PINNED) ──────────────────── */
+        .scene-equation {
+            position: relative;
+            background: var(--bg-dark);
+            color: var(--ink-inverse);
+            z-index: 30;
+            min-height: 100vh;
+        }
+        .equation-stage {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 5vw;
+            position: relative;
+        }
+        .eq-header-tag {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: var(--amber-light);
+            margin-bottom: 4vh;
+        }
+        .formula-box {
+            font-family: var(--font-mono);
+            font-size: clamp(1.6rem, 3.8vw, 4.4rem);
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.4;
+            letter-spacing: -0.01em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+        .term {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0.25;
+        }
+        .term.active {
+            opacity: 1.0;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 24px rgba(255, 68, 0, 0.25);
+        }
+        .term-cost { color: var(--ink-inverse); }
+        .term-length { color: var(--azure); }
+        .term-terrain { color: var(--celadon-light); }
+        .term-congestion { color: var(--amber-light); }
+        .term-weather { color: #FF4400; }
+        .term-hazard { color: var(--cinnabar-light); }
+
+        .telemetry-dashboard {
+            margin-top: 6vh;
+            width: 100%;
+            max-width: 960px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .telemetry-card {
+            background: var(--bg-dark-surface);
+            border: 1px solid var(--hairline-dark);
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .tele-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ink-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+        .tele-value {
+            font-family: var(--font-mono);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ink-inverse);
+            margin: 8px 0 6px;
+        }
+        .tele-desc {
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--ink-faint);
+        }
+
+        /* ── ACT IV: ALGORITHMIC COMPARATIVE LEDGER (PINNED HORIZONTAL) ── */
+        .scene-algo-ledger {
+            position: relative;
+            height: 100vh;
+            background: var(--bg-base);
+            z-index: 40;
+            overflow: hidden;
+        }
+        .ledger-track {
+            display: flex;
+            width: 400vw;
+            height: 100%;
+            align-items: center;
+        }
+        .algo-slide {
+            width: 100vw;
+            height: 100%;
+            padding: 12vh 6vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            border-right: 1px solid var(--hairline-light);
+        }
+        .algo-slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2vh;
+        }
+        .algo-title {
+            font-size: clamp(3.5rem, 8.5vw, 9.5rem);
+            font-weight: 400;
+            letter-spacing: -0.04em;
+            line-height: 0.88;
+            will-change: transform;
+        }
+        .algo-role-badge {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            background: var(--bg-surface);
+            border: 1px solid var(--hairline-strong);
+        }
+        .algo-divider {
+            height: 1px;
+            width: 100%;
+            background: var(--hairline-strong);
+            margin: 3vh 0 4vh;
+        }
+        .algo-body-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4vw;
+        }
+        .algo-analysis {
+            grid-column: 1 / 7;
+            font-size: 1.25rem;
+            line-height: 1.55;
+            color: var(--ink-deep);
+        }
+        .algo-telemetry-box {
+            grid-column: 8 / 13;
+            background: var(--bg-surface);
+            border: 1px solid var(--hairline-light);
+            border-radius: 4px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .tele-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hairline-light);
+            padding-bottom: 10px;
+        }
+        .tele-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .tele-row-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .tele-row-val {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink-black);
+        }
+        .tele-row-val.highlight {
+            color: var(--celadon);
+        }
+
+        /* ── ACT V: DEDICATED LABORATORY SCREENSHOT EXHIBITS ─────────────── */
+        .scene-lab-exhibits {
+            padding: 16vh 4vw 20vh;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--hairline-light);
+            z-index: 50;
+        }
+        .exhibits-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12vh;
+        }
+        .exhibit-slot {
+            background: var(--bg-base);
+            border: 1px solid var(--hairline-strong);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 12px 36px rgba(10, 17, 40, 0.04);
+        }
+        .exhibit-bar {
+            padding: 16px 28px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--hairline-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .exhibit-frame-stage {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #EAE7E0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        /* High-Precision Interactive UI Placeholder for Screenshot 1 & 2 */
+        .frame-placeholder-ui {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 32px;
+            background: radial-gradient(circle at 50% 50%, #FAF8F2 0%, #E8E4DA 100%);
+        }
+        .frame-top-ticker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+        .frame-center-art {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .frame-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px dashed var(--ink-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            color: var(--ink-muted);
+        }
+        .frame-title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--ink-black);
+        }
+        .frame-hint {
+            font-size: 13px;
+            color: var(--ink-muted);
+            max-width: 480px;
+            line-height: 1.5;
+        }
+        .frame-action-btn {
+            margin-top: 18px;
+            padding: 10px 20px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            background: var(--ink-black);
+            color: var(--bg-base);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .frame-action-btn:hover {
+            background: var(--cobalt);
+        }
+        .screenshot-img-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none; /* Revealed upon dropping or setting image */
+        }
+        .exhibit-footer-info {
+            padding: 28px 36px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            background: var(--bg-base);
+        }
+        .exhibit-summary {
+            grid-column: 1 / 8;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--ink-deep);
+        }
+        .exhibit-specs {
+            grid-column: 8 / 13;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ink-muted);
+            border-left: 1px solid var(--hairline-light);
+            padding-left: 24px;
+        }
+
+        /* ── ACT VI: ACADEMIC DEFENSE & PHASE 01 SIGN-OFF ────────────────── */
+        .scene-signoff {
+            padding: 14vh 4vw;
+            background: var(--bg-base);
+            border-top: 1px solid var(--hairline-strong);
+            display: flex;
+            justify-content: center;
+        }
+        .defense-card {
+            width: 100%;
+            max-width: 900px;
+            border: 2px solid var(--ink-black);
+            padding: 56px 48px;
+            background: var(--bg-surface);
+            position: relative;
+        }
+        .defense-seal {
+            position: absolute;
+            top: 48px;
+            right: 48px;
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--celadon);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--celadon);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transform: rotate(-10deg);
+        }
+        .defense-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .defense-sub {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--ink-muted);
+            margin-bottom: 32px;
+        }
+        .defense-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 40px;
+            border-top: 1px solid var(--hairline-strong);
+            padding-top: 32px;
+        }
+        .signature-block {
+            display: flex;
+            flex-direction: column;
+        }
+        .sig-rule {
+            height: 1px;
+            background: var(--ink-black);
+            margin-top: 48px;
+            margin-bottom: 12px;
+        }
+        .sig-author {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+        .sig-meta {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ink-muted);
+        }
+
+        /* ── RESPONSIVE RULES (MAX-WIDTH 767PX) ────────────────────────── */
+        @media (max-width: 767px) {
+            .academic-hud {
+                font-size: 9px;
+                padding: 10px 4vw;
+            }
+            .hud-right { display: none; }
+            .scene-overture {
+                padding-top: 14vh;
+            }
+            .overture-title {
+                font-size: 3.2rem;
+                line-height: 0.95;
+            }
+            .lead-thesis {
+                grid-column: 1 / 13;
+                font-size: 1.1rem;
+            }
+            .lead-authors {
+                grid-column: 1 / 13;
+                border-left: none;
+                border-top: 2px solid var(--hairline-strong);
+                padding-left: 0;
+                padding-top: 16px;
+                margin-top: 16px;
+            }
+            .lead-stats-strip {
+                grid-template-columns: 1fr 1fr;
+            }
+            .stat-cell {
+                border-right: none;
+                border-bottom: 1px solid var(--hairline-light);
+            }
+            .topo-card.col-5, .topo-card.col-7 {
+                grid-column: 1 / 13;
+            }
+            .schematic-compare {
+                grid-template-columns: 1fr;
+            }
+            .formula-box {
+                font-size: 1.3rem;
+            }
+            .telemetry-dashboard {
+                grid-template-columns: 1fr;
+            }
+            /* Kill horizontal ledger on mobile */
+            .scene-algo-ledger {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .ledger-track {
+                flex-direction: column !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            .algo-slide {
+                width: 100% !important;
+                height: auto !important;
+                padding: 10vh 4vw !important;
+            }
+            .algo-body-grid {
+                grid-template-columns: 1fr;
+            }
+            .algo-analysis {
+                grid-column: 1 / 13;
+            }
+            .algo-telemetry-box {
+                grid-column: 1 / 13;
+            }
+            .exhibit-footer-info {
+                grid-template-columns: 1fr;
+            }
+            .exhibit-summary { grid-column: 1 / 13; }
+            .exhibit-specs {
+                grid-column: 1 / 13;
+                border-left: none;
+                border-top: 1px solid var(--hairline-light);
+                padding-left: 0;
+                padding-top: 16px;
+            }
+            .defense-card {
+                padding: 32px 24px;
+            }
+            .defense-grid {
+                grid-template-columns: 1fr;
+            }
+            .defense-seal {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Grain Layer -->
+    <div class="ambient-grain"></div>
+
+    <!-- Top Persistent Academic HUD -->
+    <nav class="academic-hud">
+        <div class="hud-left">
+            <span class="hud-badge">UCS503P PHASE 01</span>
+            <span>THAPAR INSTITUTE OF ENGG & TECH</span>
+        </div>
+        <div class="hud-right">
+            <span>GRAPH: 18,912 NODES</span>
+            <span>4 ENGINES VERIFIED</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="live-pulse"></div>
+                <span style="color: var(--celadon); font-weight: 600;">ACTIVE ARCHITECTURE</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ACT I: OVERTURE -->
+    <section class="scene-overture">
+        <div class="overture-meta">
+            <div class="micro-tag">Architectural Defense // Autumn 2026</div>
+        </div>
+        
+        <h1 class="overture-title">
+            <span class="line-mask-wrap"><span class="line-mask-inner">AETHERGRID AI:</span></span>
+            <span class="line-mask-wrap"><span class="line-mask-inner"><em>AUTONOMOUS</em> DISPATCH</span></span>
+            <span class="line-mask-wrap"><span class="line-mask-inner">&amp; TOPOLOGY LEDGER</span></span>
+        </h1>
+
+        <div class="overture-lead">
+            <p class="lead-thesis">
+                A mission-critical routing engine designed to eliminate the <strong>OpenStreetMap Micro-Segment Leakage Dilemma</strong> and dynamic congestion flapping under atmospheric volatility through coupled-physics pricing equations and strict topological invariant enforcement.
+            </p>
+            <div class="lead-authors">
+                <div class="micro-tag azure" style="margin-bottom: 8px;">Authors &amp; Researchers</div>
+                <div class="author-name">Vishal Singla</div>
+                <div class="author-id">Roll No. 1024240009</div>
+                <div class="author-name">Sparsh Verma</div>
+                <div class="author-id">Roll No. 1024240011</div>
+            </div>
+        </div>
+
+        <div class="lead-stats-strip">
+            <div class="stat-cell">
+                <div class="stat-label">OSM Spatial Vertices</div>
+                <div class="stat-big" id="counter-nodes">18,912</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Directed Road Edges</div>
+                <div class="stat-big" id="counter-edges">24,164</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Dispatch Latency (P90)</div>
+                <div class="stat-big" style="color: var(--celadon);">&lt; 12ms</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-label">Admissibility Violations</div>
+                <div class="stat-big" style="color: var(--cinnabar);">0 / 2,500</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACT II: TOPOLOGY & INVARIANT I1 -->
+    <section class="scene-topology">
+        <div class="section-header">
+            <div>
+                <div class="micro-tag" style="margin-bottom: 12px;">Act II // Structural Analysis</div>
+                <h2 class="section-title">Network Ingestion &amp; The Micro-Segment Leakage Dilemma</h2>
+            </div>
+            <div class="mono" style="font-size: 12px; color: var(--ink-muted);">SECTION // 02</div>
+        </div>
+
+        <div class="grid-12">
+            <!-- Left: OSM Topology & Terrain Tiers -->
+            <div class="topo-card col-5">
+                <div class="micro-tag azure">Ingestion Layer</div>
+                <h3 style="font-size: 1.8rem; margin: 16px 0 12px;">Dual Cartographic Ingestion</h3>
+                <p style="font-size: 14px; line-height: 1.6; color: var(--ink-deep);">
+                    Real-world OpenStreetMap Overpass extraction parsing high-density metropolitan networks into directed graphs. Implements one-way restrictions, turn angles, multi-lane capacities, and terrain friction:
+                </p>
+                
+                <div class="terrain-matrix">
+                    <div class="terrain-row">
+                        <span>Highways &amp; Grade-Separated Freeways</span>
+                        <span class="terrain-badge">&tau; = 1.00</span>
+                    </div>
+                    <div class="terrain-row">
+                        <span>Primary Arterials &amp; Transit Spines</span>
+                        <span class="terrain-badge">&tau; = 1.15</span>
+                    </div>
+                    <div class="terrain-row">
+                        <span>Secondary Urban Local Streets</span>
+                        <span class="terrain-badge">&tau; = 1.30</span>
+                    </div>
+                    <div class="terrain-row">
+                        <span>Narrow Alleys &amp; Service Cut-Throughs</span>
+                        <span class="terrain-badge">&tau; = 1.60</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Invariant I1 & Corridor Block Expansion -->
+            <div class="topo-card col-7">
+                <div class="micro-tag cinnabar">Topological Safeguard</div>
+                <h3 style="font-size: 1.8rem; margin: 16px 0 12px;">Corridor Block Expansion Algorithm</h3>
+                <p style="font-size: 14px; line-height: 1.6; color: var(--ink-deep);">
+                    Naive edge closures fail catastrophic in real-world OSM dual-carriageway graphs. When a toxic hazard or flood strikes an intersection, naive algorithms close a single edge, permitting emergency routing to dangerously bypass the closure via parallel service slipways.
+                </p>
+
+                <div class="invariant-box">
+                    <div class="invariant-title">&bull; Formal Topological Invariant I1</div>
+                    <p style="font-size: 13px; line-height: 1.5; color: var(--ink-deep);">
+                        <em>"No dispatched route &Pi; may intersect any node or edge falling within the convex hazard perimeter or active quarantine boundary &Omega;."</em>
+                    </p>
+                </div>
+
+                <div class="schematic-compare">
+                    <div class="schematic-col fail">
+                        <h5>Standard OSM Router (Defect)</h5>
+                        <p>Closes only the single primary segment. Vehicles leak through parallel service roads, causing catastrophic HazMat and flood exposure.</p>
+                    </div>
+                    <div class="schematic-col pass">
+                        <h5>Aether Corridor Expansion (Protected)</h5>
+                        <p>Traverses connected micro-segments, turning loops, and parallel carriageways to enforce a mathematically leak-proof quarantine envelope.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACT III: THE MASTER COST EQUATION & EWMA FILTER (PINNED CENTERPIECE) -->
+    <section class="scene-equation" id="equation-section">
+        <div class="equation-stage">
+            <div class="eq-header-tag">Act III // Mathematical Formulation</div>
+            
+            <div class="formula-box">
+                <span class="term term-cost" id="term-cost">c(e, t)</span>
+                <span>=</span>
+                <span class="term term-length" id="term-length">&ell;<sub>e</sub></span>
+                <span>&sdot;</span>
+                <span class="term term-terrain" id="term-terrain">&tau;<sub>e</sub></span>
+                <span>&sdot;</span>
+                <span class="term term-congestion" id="term-congestion">(1 + &alpha;<sub>eff</sub> &sdot; &rho;<sub>e</sub>(t))</span>
+                <span>&sdot;</span>
+                <span class="term term-weather" id="term-weather">&omega;<sub>eff</sub>(corridor, weather)</span>
+                <span>+</span>
+                <span class="term term-hazard" id="term-hazard">&beta; &sdot; &#x1D7D9;[hazard]</span>
+            </div>
+
+            <div class="telemetry-dashboard">
+                <div class="telemetry-card">
+                    <div class="tele-label">Coupled Weather &Omega;<sub>eff</sub></div>
+                    <div class="tele-value" id="disp-weather">1.10x &rarr; 2.50x</div>
+                    <div class="tele-desc">Priority salted spines (Broadway/5th Ave) retain 1.10x during blizzards, while elevated highways freeze to 2.50x.</div>
+                </div>
+                <div class="telemetry-card">
+                    <div class="tele-label">Siren Attenuation &alpha;<sub>eff</sub></div>
+                    <div class="tele-value" id="disp-siren">&alpha; &times; 0.35</div>
+                    <div class="tele-desc">Emergency response sirens attenuate perceived traffic density by 65%, maintaining direct transit under congestion.</div>
+                </div>
+                <div class="telemetry-card">
+                    <div class="tele-label">EWMA Anti-Flapping Filter</div>
+                    <div class="tele-value" id="disp-ewma">&rho;&#772;<sub>t</sub> = &alpha;&rho;<sub>t</sub> + (1-&alpha;)&rho;&#772;<sub>t-1</sub></div>
+                    <div class="tele-desc">Variance suppression filter eliminates route oscillation between parallel north-south avenues.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACT IV: ALGORITHMIC COMPARATIVE LEDGER (PINNED HORIZONTAL) -->
+    <section class="scene-algo-ledger" id="algo-section">
+        <div class="ledger-track" id="ledger-track">
+            
+            <!-- Slide 1: Dijkstra -->
+            <div class="algo-slide">
+                <div class="algo-slide-header">
+                    <div class="micro-tag">Engine 01 // Baseline</div>
+                    <span class="algo-role-badge">Optimal Uniform</span>
+                </div>
+                <h2 class="algo-title skew-target">DIJKSTRA</h2>
+                <div class="algo-divider"></div>
+                <div class="algo-body-grid">
+                    <div class="algo-analysis">
+                        Exhaustive priority-queue exploration over the complete graph topology. Serves as our non-heuristic empirical ground truth for verifying optimal cost baselines across non-negative edge weight distributions.
+                    </div>
+                    <div class="algo-telemetry-box">
+                        <div class="tele-row">
+                            <span class="tele-row-label">Time Complexity</span>
+                            <span class="tele-row-val">O(|E| + |V| log |V|)</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Heuristic Guidance</span>
+                            <span class="tele-row-val">None (Uniform Wavefront)</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Role in Aether</span>
+                            <span class="tele-row-val">Verification Ground Truth</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Bellman-Ford -->
+            <div class="algo-slide">
+                <div class="algo-slide-header">
+                    <div class="micro-tag cinnabar">Engine 02 // Auditor</div>
+                    <span class="algo-role-badge">Anomaly &amp; Cycle Guard</span>
+                </div>
+                <h2 class="algo-title skew-target">BELLMAN-FORD</h2>
+                <div class="algo-divider"></div>
+                <div class="algo-body-grid">
+                    <div class="algo-analysis">
+                        Iterative edge relaxation spanning |V|-1 passes. Employed specifically to audit dynamic cost models, detecting anomalous negative cost cycles or runaway penalty discounting in real-time pricing feeds.
+                    </div>
+                    <div class="algo-telemetry-box">
+                        <div class="tele-row">
+                            <span class="tele-row-label">Time Complexity</span>
+                            <span class="tele-row-val">O(|V| &sdot; |E|)</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Negative Edge Handling</span>
+                            <span class="tele-row-val">Robust + Cycle Detection</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Role in Aether</span>
+                            <span class="tele-row-val">Pricing Integrity Sentinel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Floyd-Warshall -->
+            <div class="algo-slide">
+                <div class="algo-slide-header">
+                    <div class="micro-tag amber">Engine 03 // Matrix</div>
+                    <span class="algo-role-badge">All-Pairs Dense</span>
+                </div>
+                <h2 class="algo-title skew-target">FLOYD-WARSHALL</h2>
+                <div class="algo-divider"></div>
+                <div class="algo-body-grid">
+                    <div class="algo-analysis">
+                        Dynamic programming all-pairs shortest path matrix. Evaluates full cross-connectivity across isolated subgraphs and hospital depot clusters, caching distance matrices for regional emergency hubs.
+                    </div>
+                    <div class="algo-telemetry-box">
+                        <div class="tele-row">
+                            <span class="tele-row-label">Time Complexity</span>
+                            <span class="tele-row-val">O(|V|<sup>3</sup>)</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Matrix Footprint</span>
+                            <span class="tele-row-val">Dense |V| &times; |V|</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Role in Aether</span>
+                            <span class="tele-row-val">Depot Hub Static Pre-computation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Dynamic A* & Bidirectional A* -->
+            <div class="algo-slide">
+                <div class="algo-slide-header">
+                    <div class="micro-tag azure">Engine 04 // Core Dispatch</div>
+                    <span class="algo-role-badge" style="background: var(--celadon-tint); color: var(--celadon);">Production Engine</span>
+                </div>
+                <h2 class="algo-title skew-target">DYNAMIC A*</h2>
+                <div class="algo-divider"></div>
+                <div class="algo-body-grid">
+                    <div class="algo-analysis">
+                        High-speed heuristic search using admissible Haversine Euclidean lower bounds. Confirmed unconditionally admissible (0 violations across 2,500 trials), shrinking the search space by up to 78% with P90 latency under 12ms.
+                    </div>
+                    <div class="algo-telemetry-box">
+                        <div class="tele-row">
+                            <span class="tele-row-label">Dispatch Latency (P90)</span>
+                            <span class="tele-row-val highlight">&lt; 12ms</span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Heuristic Bound</span>
+                            <span class="tele-row-val">h(u, v) = d<sub>haversine</sub> / v<sub>max</sub></span>
+                        </div>
+                        <div class="tele-row">
+                            <span class="tele-row-label">Admissibility Record</span>
+                            <span class="tele-row-val highlight">100.0% Guaranteed (2,500 Trials)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ACT V: DEDICATED LABORATORY SCREENSHOT EXHIBITS (EXHIBIT 1 & EXHIBIT 2) -->
+    <section class="scene-lab-exhibits">
+        <div class="section-header">
+            <div>
+                <div class="micro-tag" style="margin-bottom: 12px;">Act V // Empirical Verification</div>
+                <h2 class="section-title">Laboratory Telemetry &amp; Systemic Proofs</h2>
+            </div>
+            <div class="mono" style="font-size: 12px; color: var(--ink-muted);">EXHIBITS // 01 &amp; 02</div>
+        </div>
+
+        <div class="exhibits-container">
+            
+            <!-- EXHIBIT 01: LAB SCREENSHOT 1 -->
+            <div class="exhibit-slot" id="exhibit-frame-1">
+                <div class="exhibit-bar">
+                    <span>EXHIBIT 01 // REAL-TIME DISPATCH MISSION CONTROL</span>
+                    <span style="color: var(--celadon); font-weight: 600;">STATUS: READY FOR LAB SCREENSHOT 1</span>
+                </div>
+                
+                <div class="exhibit-frame-stage" id="stage-screenshot-1">
+                    <!-- Default High-Fidelity Interactive Preview & Drop Frame -->
+                    <div class="frame-placeholder-ui" id="placeholder-ui-1">
+                        <div class="frame-top-ticker">
+                            <span class="mono">LIVE MAP CARTOGRAPHY // LEAFLET OSM ENGINE</span>
+                            <span class="hud-badge">TELEMETRY FRAME 01</span>
+                        </div>
+                        <div class="frame-center-art">
+                            <div class="frame-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                                    <line x1="9" y1="3" x2="9" y2="18"></line>
+                                    <line x1="15" y1="6" x2="15" y2="21"></line>
+                                </svg>
+                            </div>
+                            <h4 class="frame-title">Mission Control Simulation Screen</h4>
+                            <p class="frame-hint">
+                                Dedicated exhibit frame reserved for <strong>Lab Screenshot 1</strong> (Real-Time Leaflet Cartography, Vehicle State Machine, Dynamic Hazard Perimeters, and Weather Layers).
+                            </p>
+                            <input type="file" id="file-input-1" accept="image/*" style="display: none;">
+                            <button class="frame-action-btn" onclick="document.getElementById('file-input-1').click();">
+                                Select or Drag Lab Screenshot 1
+                            </button>
+                        </div>
+                        <div class="frame-top-ticker">
+                            <span class="mono" style="color: var(--ink-muted);">MANHATTAN &amp; PATIALA SPATIAL TOPOLOGIES</span>
+                            <span class="mono" style="color: var(--ink-muted);">LATENCY: 11.4ms</span>
+                        </div>
+                    </div>
+                    <!-- Live Image Element -->
+                    <img class="screenshot-img-element" id="screenshot-img-1" alt="Lab Screenshot 1 - Mission Control">
+                </div>
+
+                <div class="exhibit-footer-info">
+                    <div class="exhibit-summary">
+                        <h5 style="font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; margin-bottom: 8px;">Simulation Engine Validation</h5>
+                        <p>
+                            Demonstrates real-time emergency dispatch state machines (En Route &rarr; At Scene &rarr; Transporting &rarr; Clear) across active urban road networks. The system reacts instantly to dynamic incident injection, recalculating paths in &lt;12ms without blocking the UI thread.
+                        </p>
+                    </div>
+                    <div class="exhibit-specs">
+                        <div>&bull; Rendering: Leaflet Engine + Vector Splines</div>
+                        <div>&bull; Vehicle State Machine: 4 Discrete Modes</div>
+                        <div>&bull; Event Streaming: Live Incident Injection</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXHIBIT 02: LAB SCREENSHOT 2 -->
+            <div class="exhibit-slot" id="exhibit-frame-2">
+                <div class="exhibit-bar">
+                    <span>EXHIBIT 02 // MULTI-SCALE BENCHMARKS &amp; MEMORY TELEMETRY</span>
+                    <span style="color: var(--cobalt); font-weight: 600;">STATUS: READY FOR LAB SCREENSHOT 2</span>
+                </div>
+                
+                <div class="exhibit-frame-stage" id="stage-screenshot-2">
+                    <!-- Default High-Fidelity Interactive Preview & Drop Frame -->
+                    <div class="frame-placeholder-ui" id="placeholder-ui-2">
+                        <div class="frame-top-ticker">
+                            <span class="mono">EMPIRICAL PROFILING // TRACEMALLOC &amp; LATENCY DISTRIBUTIONS</span>
+                            <span class="hud-badge" style="background: var(--cobalt-tint); color: var(--cobalt);">TELEMETRY FRAME 02</span>
+                        </div>
+                        <div class="frame-center-art">
+                            <div class="frame-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </div>
+                            <h4 class="frame-title">Empirical Benchmark Telemetry Screen</h4>
+                            <p class="frame-hint">
+                                Dedicated exhibit frame reserved for <strong>Lab Screenshot 2</strong> (P50/P90/P99 latency distributions, memory usage profiling, and search tree pruning comparisons across 2,500 trials).
+                            </p>
+                            <input type="file" id="file-input-2" accept="image/*" style="display: none;">
+                            <button class="frame-action-btn" onclick="document.getElementById('file-input-2').click();">
+                                Select or Drag Lab Screenshot 2
+                            </button>
+                        </div>
+                        <div class="frame-top-ticker">
+                            <span class="mono" style="color: var(--ink-muted);">SEARCH PRUNING: 78.4%</span>
+                            <span class="mono" style="color: var(--ink-muted);">VIOLATIONS: 0.00%</span>
+                        </div>
+                    </div>
+                    <!-- Live Image Element -->
+                    <img class="screenshot-img-element" id="screenshot-img-2" alt="Lab Screenshot 2 - Benchmarks">
+                </div>
+
+                <div class="exhibit-footer-info">
+                    <div class="exhibit-summary">
+                        <h5 style="font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; margin-bottom: 8px;">Computational Rigor &amp; Admissibility Guarantee</h5>
+                        <p>
+                            Exhaustive profiling demonstrating consistent O(|E| + |V| log |V|) bounds, memory stability under Python tracemalloc, and complete admissibility verification asserting h(u, goal) &le; c*(u, goal) across randomized weather and congestion states.
+                        </p>
+                    </div>
+                    <div class="exhibit-specs">
+                        <div>&bull; Sample Size: 2,500 Pre-Registered Trials</div>
+                        <div>&bull; Profiler: tracemalloc + High-Res Clock</div>
+                        <div>&bull; Variance Suppression: EWMA Damping Filter</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ACT VI: ACADEMIC DEFENSE & PHASE 01 SIGN-OFF -->
+    <section class="scene-signoff">
+        <div class="defense-card">
+            <div class="defense-seal">
+                PHASE 01<br>DEFENSE<br>VERIFIED
+            </div>
+            
+            <div class="micro-tag" style="margin-bottom: 16px;">Software Engineering Capstone // UCS503P</div>
+            <h3 class="defense-title">AetherGrid AI Architecture &amp; Theory Defense</h3>
+            <p class="defense-sub">Department of Computer Science and Engineering &bull; Thapar Institute of Engineering &amp; Technology</p>
+            
+            <p style="font-size: 14px; line-height: 1.7; color: var(--ink-deep);">
+                This presentation formally concludes Phase 01: Mathematical Formulation, Topological Safeguards (Invariant I1), Network Ingestion (18,912 nodes, 24,164 edges), Dynamic Pricing Physics, and Empirical Algorithmic Benchmarking.
+            </p>
+
+            <div class="defense-grid">
+                <div class="signature-block">
+                    <div class="sig-rule"></div>
+                    <div class="sig-author">Vishal Singla</div>
+                    <div class="sig-meta">Roll No: 1024240009 &bull; Co-Lead Engineering</div>
+                </div>
+                <div class="signature-block">
+                    <div class="sig-rule"></div>
+                    <div class="sig-author">Sparsh Verma</div>
+                    <div class="sig-meta">Roll No: 1024240011 &bull; Co-Lead Engineering</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Libraries: Lenis + GSAP 3.12.5 + ScrollTrigger -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // ── 1. Lenis Smooth Scrolling Engine ──────────────────────────────
+        const lenis = new Lenis({
+            duration: 1.15,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1.0,
+            smoothTouch: false,
+            touchMultiplier: 2.0,
+            infinite: false
+        });
+
+        // Strict Ticker Invariant: Named callback with clean synchronization
+        const tick = (time) => {
+            lenis.raf(time * 1000);
+        };
+        gsap.ticker.add(tick);
+        gsap.ticker.lagSmoothing(0);
+
+        // ── 2. Responsive Kinematics with MatchMedia ───────────────────────
+        const mm = gsap.matchMedia();
+
+        mm.add("(min-width: 768px)", () => {
+            
+            // Overture Line-Mask Entrance
+            gsap.fromTo(".line-mask-inner", 
+                { y: "115%" }, 
+                { y: "0%", duration: 1.25, ease: "power4.out", stagger: 0.08, clearProps: 'transform' }
+            );
+
+            // Metric Counters Animate
+            const countNodes = { val: 0 };
+            gsap.to(countNodes, {
+                val: 18912,
+                duration: 2.4,
+                ease: "power3.out",
+                onUpdate: () => {
+                    document.getElementById("counter-nodes").innerText = Math.floor(countNodes.val).toLocaleString();
+                }
+            });
+
+            const countEdges = { val: 0 };
+            gsap.to(countEdges, {
+                val: 24164,
+                duration: 2.6,
+                ease: "power3.out",
+                onUpdate: () => {
+                    document.getElementById("counter-edges").innerText = Math.floor(countEdges.val).toLocaleString();
+                }
+            });
+
+            // Act III: Master Equation Scrubbed Pinned Stage
+            const eqTerms = ["#term-cost", "#term-length", "#term-terrain", "#term-congestion", "#term-weather", "#term-hazard"];
+            
+            const eqTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#equation-section",
+                    start: "top top",
+                    end: "+=220%",
+                    pin: true,
+                    pinSpacing: true,
+                    scrub: 1.0,
+                    onUpdate: (self) => {
+                        const p = self.progress;
+                        // Synchronize telemetry values to scrub position
+                        const weatherVal = document.getElementById("disp-weather");
+                        const sirenVal = document.getElementById("disp-siren");
+                        if (p < 0.3) {
+                            weatherVal.innerText = "1.00x (Clear)";
+                            sirenVal.innerText = "\u03b1 \u00d7 1.00 (Normal)";
+                        } else if (p < 0.7) {
+                            weatherVal.innerText = "1.85x (Flood / Storm)";
+                            sirenVal.innerText = "\u03b1 \u00d7 0.35 (Siren Priority)";
+                        } else {
+                            weatherVal.innerText = "2.50x (Blizzard / Highway Ice)";
+                            sirenVal.innerText = "\u03b1 \u00d7 0.35 (Siren Active)";
+                        }
+                    }
+                }
+            });
+
+            // Sequentially illuminate formula terms
+            eqTerms.forEach((selector, idx) => {
+                eqTl.to(selector, {
+                    opacity: 1.0,
+                    className: "term active " + selector.replace('#', ''),
+                    duration: 0.5,
+                    ease: "power2.out"
+                }, idx * 0.4);
+            });
+
+            // Act IV: Algorithmic Comparative Ledger (Pinned Horizontal Track)
+            const ledgerTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#algo-section",
+                    start: "top top",
+                    end: "+=320%",
+                    pin: true,
+                    pinSpacing: true,
+                    scrub: 1.2
+                }
+            });
+
+            ledgerTl.fromTo("#ledger-track", 
+                { x: "0%" }, 
+                { x: "-300%", ease: "none" }
+            );
+
+            // Velocity-based dynamic text skewing
+            let proxy = { skew: 0 };
+            const skewSetter = gsap.quickSetter(".skew-target", "skewX", "deg");
+            const clampSkew = gsap.utils.clamp(-12, 12);
+
+            ScrollTrigger.create({
+                onUpdate: (self) => {
+                    let skew = clampSkew(self.getVelocity() / -120);
+                    if (Math.abs(skew) > Math.abs(proxy.skew)) {
+                        proxy.skew = skew;
+                        gsap.to(proxy, {
+                            skew: 0,
+                            duration: 0.75,
+                            ease: "power3.out",
+                            overwrite: true,
+                            onUpdate: () => skewSetter(proxy.skew)
+                        });
+                    }
+                }
+            });
+
+            // Act V: Exhibit Frames Staggered Scale-In
+            gsap.fromTo(".exhibit-slot",
+                { scale: 0.96, opacity: 0.8 },
+                {
+                    scale: 1.0,
+                    opacity: 1.0,
+                    duration: 1.2,
+                    ease: "power3.out",
+                    stagger: 0.3,
+                    scrollTrigger: {
+                        trigger: ".scene-lab-exhibits",
+                        start: "top 75%"
+                    }
+                }
+            );
+
+        });
+
+        // ── 3. Mobile Fallback (Responsive Invariant) ──────────────────────
+        mm.add("(max-width: 767px)", () => {
+            gsap.set(".line-mask-inner", { y: "0%" });
+            gsap.set(".term", { opacity: 1.0 });
+            document.getElementById("counter-nodes").innerText = "18,912";
+            document.getElementById("counter-edges").innerText = "24,164";
+        });
+
+        // ── 4. Interactive Drag & Drop / File Selector for Lab Screenshots ──
+        function wireScreenshotUploader(fileInputId, stageId, placeholderId, imgId) {
+            const input = document.getElementById(fileInputId);
+            const stage = document.getElementById(stageId);
+            const placeholder = document.getElementById(placeholderId);
+            const img = document.getElementById(imgId);
+
+            if (!input || !stage || !img) return;
+
+            function handleFile(file) {
+                if (!file || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            input.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            stage.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                stage.style.border = '2px dashed var(--celadon)';
+            });
+
+            stage.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                stage.style.border = 'none';
+            });
+
+            stage.addEventListener('drop', (e) => {
+                e.preventDefault();
+                stage.style.border = 'none';
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        wireScreenshotUploader('file-input-1', 'stage-screenshot-1', 'placeholder-ui-1', 'screenshot-img-1');
+        wireScreenshotUploader('file-input-2', 'stage-screenshot-2', 'placeholder-ui-2', 'screenshot-img-2');
+
+    </script>
+</body>
+</html>
+"""
+
+with open("docs/index.html", "w") as f:
+    f.write(html)
+
+print("Generated docs/index.html successfully.")

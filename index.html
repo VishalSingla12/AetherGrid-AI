@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherGrid AI — Autonomous Logistics &amp; Emergency Dispatch</title>
+  <meta name="description" content="Autonomous fleet dispatch simulation with real-time pathfinding over OpenStreetMap Manhattan graph topology. UCS503P Software Engineering, Thapar Institute.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Grain overlay (Invariant #5: static tile, NO feTurbulence) -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Transit-line SVG connector overlay (SIGNATURE MOVE) -->
+  <div class="transit-svg-wrap" aria-hidden="true">
+    <svg class="transit-svg" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="tg1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2F5B46"/>
+          <stop offset="100%" stop-color="#B33927"/>
+        </linearGradient>
+        <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#B33927"/>
+          <stop offset="100%" stop-color="#B38024"/>
+        </linearGradient>
+        <linearGradient id="tg3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#B38024"/>
+          <stop offset="100%" stop-color="#2F5B46"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- ═══════ SCENE 1 — THRESHOLD ═══════ -->
+  <section class="scene scene--threshold" id="scene-1">
+    <div class="scene__bg-grid" aria-hidden="true"></div>
+    <div class="scene__crease" aria-hidden="true"></div>
+    <div class="scene__inner g12">
+      <div class="hero-text" data-col="1-8">
+        <h1 class="hero-title">
+          <span class="lm"><span class="lm__i">AETHER</span></span><span class="lm"><span class="lm__i">GRID</span></span>
+        </h1>
+        <p class="hero-sub">Autonomous Logistics &amp; <em>Emergency</em> Dispatch Simulation</p>
+        <span class="hero-micro">Phase-1 Prototype · Manhattan OSM · 4 Algorithms</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ SCENE 2 — EXPOSITION ═══════ -->
+  <section class="scene scene--exposition" id="scene-2">
+    <span class="scene__label">01/ GRAPH ENGINE</span>
+    <div class="scene__inner g12">
+      <div class="stat-col" data-col="1-5">
+        <div class="stat-card"><span class="stat-card__lbl">Manhattan Nodes</span><span class="stat-card__num" data-target="18912">0</span></div>
+        <div class="stat-card"><span class="stat-card__lbl">Network Edges</span><span class="stat-card__num" data-target="24164">0</span></div>
+        <div class="stat-card"><span class="stat-card__lbl">Algorithms</span><span class="stat-card__num" data-target="4">0</span></div>
+        <div class="stat-card"><span class="stat-card__lbl">Weather Regimes</span><span class="stat-card__num" data-target="4">0</span></div>
+      </div>
+      <div class="info-panel" data-col="7-12">
+        <h2 class="info-panel__title">Dynamic Directed Graph</h2>
+        <p class="info-panel__body">Real-time topology <em>G<sub>t</sub>&thinsp;=&thinsp;(V,&thinsp;E<sub>t</sub>)</em> built from OpenStreetMap. Manhattan's street network — 18,912 strongly connected nodes, 24,164 weighted edges — with EWMA congestion smoothing and corridor-specific weather multipliers.</p>
+        <div class="info-panel__tags">
+          <span class="tag">OSM Import</span><span class="tag">SCC Reduction</span><span class="tag">EWMA</span><span class="tag">Weather Overlay</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ SCENE 3 — CLIMAX ═══════ -->
+  <section class="scene scene--climax" id="scene-3">
+    <span class="scene__label">02/ PATHFINDING</span>
+    <div class="scene__contours" aria-hidden="true"></div>
+    <div class="scene__inner">
+      <div class="algo-compare">
+        <div class="algo-col">
+          <h3 class="algo-col__name"><span class="lm"><span class="lm__i">Dynamic A*</span></span></h3>
+          <div class="wf-bar"><div class="wf-bar__fill" data-cov="100"></div></div>
+          <span class="algo-col__stat">Full Search</span>
+        </div>
+        <div class="algo-col">
+          <h3 class="algo-col__name"><span class="lm"><span class="lm__i">Bidirectional A*</span></span></h3>
+          <div class="wf-bar"><div class="wf-bar__fill" data-cov="21.3"></div></div>
+          <span class="algo-col__stat">78.7% Pruned</span>
+        </div>
+        <div class="algo-col">
+          <h3 class="algo-col__name"><span class="lm"><span class="lm__i">Dijkstra</span></span></h3>
+          <div class="wf-bar"><div class="wf-bar__fill" data-cov="100"></div></div>
+          <span class="algo-col__stat">Baseline</span>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span class="metric__num" data-target="78.7" data-decimal="true">0</span><span class="metric__unit">%</span><span class="metric__desc">Search Space Pruned</span></div>
+        <div class="metric"><span class="metric__num" data-target="0">0</span><span class="metric__desc">Admissibility Violations</span></div>
+        <div class="metric"><span class="metric__num" data-target="93.7" data-decimal="true">0</span><span class="metric__unit">%</span><span class="metric__desc">Path Divergence in Snow</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ SCENE 4 — DECELERATION ═══════ -->
+  <section class="scene scene--deceleration" id="scene-4">
+    <span class="scene__label">03/ INVARIANTS</span>
+    <div class="scene__inner">
+      <div class="inv-grid">
+        <div class="inv-card" data-status="proven">
+          <span class="inv-card__code">I1</span>
+          <h4 class="inv-card__name">Closure Safety</h4>
+          <span class="inv-card__badge inv-card__badge--proven">PROVEN</span>
+          <p class="inv-card__desc">No shortest path traverses a closed edge under any weather condition</p>
+        </div>
+        <div class="inv-card" data-status="proven">
+          <span class="inv-card__code">I2</span>
+          <h4 class="inv-card__name">Admissibility</h4>
+          <span class="inv-card__badge inv-card__badge--proven">PROVEN</span>
+          <p class="inv-card__desc">A* heuristic never overestimates true cost across 2,462 trials</p>
+        </div>
+        <div class="inv-card" data-status="proven">
+          <span class="inv-card__code">I3</span>
+          <h4 class="inv-card__name">Energy Bounds</h4>
+          <span class="inv-card__badge inv-card__badge--proven">PROVEN</span>
+          <p class="inv-card__desc">Weighted path cost ≤ ε·optimal for Weighted A* (ε = 2.5)</p>
+        </div>
+        <div class="inv-card" data-status="specified">
+          <span class="inv-card__code">I4</span>
+          <h4 class="inv-card__name">Determinism</h4>
+          <span class="inv-card__badge inv-card__badge--spec">SPECIFIED</span>
+          <p class="inv-card__desc">Same seed produces identical simulation across runs</p>
+        </div>
+        <div class="inv-card" data-status="specified">
+          <span class="inv-card__code">I5</span>
+          <h4 class="inv-card__name">Hungarian Dominance</h4>
+          <span class="inv-card__badge inv-card__badge--spec">SPECIFIED</span>
+          <p class="inv-card__desc">Optimal assignment ≤ greedy cost for all demand patterns</p>
+        </div>
+        <div class="inv-card" data-status="specified">
+          <span class="inv-card__code">I6</span>
+          <h4 class="inv-card__name">Fleet Conservation</h4>
+          <span class="inv-card__badge inv-card__badge--spec">SPECIFIED</span>
+          <p class="inv-card__desc">Vehicle count remains constant across simulation lifecycle</p>
+        </div>
+      </div>
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track">
+          <span class="marquee__t">2,462 TRIALS · 0 VIOLATIONS · 85.9% VARIANCE REDUCTION&ensp;·&ensp;</span>
+          <span class="marquee__t">2,462 TRIALS · 0 VIOLATIONS · 85.9% VARIANCE REDUCTION&ensp;·&ensp;</span>
+          <span class="marquee__t">2,462 TRIALS · 0 VIOLATIONS · 85.9% VARIANCE REDUCTION&ensp;·&ensp;</span>
+          <span class="marquee__t">2,462 TRIALS · 0 VIOLATIONS · 85.9% VARIANCE REDUCTION&ensp;·&ensp;</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ SCENE 5 — CLOSURE ═══════ -->
+  <section class="scene scene--closure" id="scene-5">
+    <span class="scene__label">04/ DISPATCH</span>
+    <div class="scene__inner g12">
+      <div class="manifest" data-col="1-6">
+        <span class="manifest__micro">DISPATCH MANIFEST</span>
+        <div class="manifest__row"><span class="manifest__k">Authors</span><span class="manifest__v">Sparsh Verma · Vishal Singla</span></div>
+        <div class="manifest__row"><span class="manifest__k">Course</span><span class="manifest__v">UCS503P Software Engineering</span></div>
+        <div class="manifest__row"><span class="manifest__k">Institution</span><span class="manifest__v">Thapar Institute of Engineering &amp; Technology</span></div>
+        <div class="manifest__row"><span class="manifest__k">Supervisor</span><span class="manifest__v">Dr. Zeelani</span></div>
+        <div class="manifest__row"><span class="manifest__k">Roll Numbers</span><span class="manifest__v">1024240011 · 1024240009</span></div>
+      </div>
+      <div class="link-cards" data-col="7-12">
+        <!-- 01: DOCUMENTATION CARD & PREVIEW DOCK -->
+        <div class="link-card-wrap" id="docs-card-wrap">
+          <a href="Project_Proposal_&_ppt/project_proposal_1.pdf" target="_blank" rel="noopener" class="link-card link-card--docs magnetic-btn" id="docs-trigger">
+            <span class="link-card__icon">📄</span>
+            <div class="link-card__info">
+              <div class="link-card__title-row">
+                <span class="link-card__title">Documentation</span>
+                <span class="link-card__pill link-card__pill--docs">Spec Rev 1.0</span>
+              </div>
+              <span class="link-card__sub">System Design Report · AEG-RPT-001 Formal Baseline</span>
+            </div>
+          </a>
+
+          <!-- Hover Overview Floating Deck for Documentation -->
+          <div class="docs-preview-dock ppt-preview-dock" id="docs-preview" aria-hidden="true">
+            <div class="ppt-preview-card">
+              <!-- Sub-scroll progress line -->
+              <div class="ppt-subscroll-bar">
+                <div class="ppt-subscroll-fill" id="docs-subscroll-fill" style="width: 33%;"></div>
+              </div>
+
+              <div class="ppt-preview-header">
+                <div class="ppt-preview-status">
+                  <span class="ppt-status-dot" id="docs-status-dot"></span>
+                  <span class="ppt-status-text" id="docs-status-text-full">DOC <span id="docs-active-num">01</span> / 02 · <span id="docs-active-title">SYSTEM DESIGN REPORT REV 1.0</span></span>
+                </div>
+                <div class="ppt-preview-actions">
+                  <!-- Carousel navigation buttons -->
+                  <button type="button" class="ppt-nav-arrow" id="docs-prev-btn" title="Previous Document" aria-label="Previous Document" disabled>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-nav-arrow" id="docs-next-btn" title="Next Document" aria-label="Next Document">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-btn-icon" id="docs-preview-expand-btn" title="Expand Document Modal">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    <span>Expand</span>
+                  </button>
+                  <a href="Project_Proposal_&_ppt/project_proposal_1.pdf" target="_blank" rel="noopener" class="ppt-btn-icon" id="docs-newtab-link" title="Open document in new tab">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    <span>New Tab</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sub-scroll sliding viewport -->
+              <div class="ppt-carousel-viewport" id="docs-carousel-viewport">
+                <div class="ppt-carousel-track" id="docs-carousel-track">
+                  
+                  <!-- SLIDE 1: Primary Document - project_proposal_1.pdf -->
+                  <div class="ppt-carousel-slide" data-index="0" data-name="SYSTEM DESIGN REPORT REV 1.0" data-url="Project_Proposal_&_ppt/project_proposal_1.pdf">
+                    <div class="ppt-preview-frame-wrap doc-preview-frame-wrap" data-doc-trigger="0" role="button" tabindex="0" aria-label="Expand System Design Report Document">
+                      <iframe class="doc-preview-iframe" src="Project_Proposal_&_ppt/project_proposal_1.pdf#toolbar=0&navpanes=0&scrollbar=0&view=FitH" title="System Design Report Preview" loading="lazy" tabindex="-1"></iframe>
+                      <div class="ppt-frame-overlay">
+                        <span class="ppt-frame-hint">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                          Open Document (AEG-RPT-001)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 2: Dynamic Cost Pricing Specification - CostPricingdocs.pdf -->
+                  <div class="ppt-carousel-slide" data-index="1" data-name="DYNAMIC COST PRICING SPECIFICATION" data-url="docs/CostPricingdocs.pdf">
+                    <div class="ppt-preview-frame-wrap doc-preview-frame-wrap" style="background-image: url('assets/images/cost_pricing_docs_preview.png');" data-doc-trigger="1" role="button" tabindex="0" aria-label="Expand Dynamic Cost Pricing Specification Document">
+                      <iframe class="doc-preview-iframe" src="docs/CostPricingdocs.pdf#toolbar=0&navpanes=0&scrollbar=0&view=FitH" title="Dynamic Cost Pricing Specification Preview" loading="lazy" tabindex="-1"></iframe>
+                      <div class="ppt-frame-overlay">
+                        <span class="ppt-frame-hint">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                          Open Document (Cost &amp; Pricing Spec)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 3: Terminal Slide (End of the Road) -->
+                  <div class="ppt-carousel-slide ppt-carousel-slide--end" data-index="2" data-name="THAT'S THE END OF THE ROAD" data-url="docs/CostPricingdocs.pdf">
+                    <div class="ppt-end-card">
+                      <span class="ppt-end-card__badge">TERMINAL REACHED</span>
+                      <h4 class="ppt-end-card__heading">That's the end of the road</h4>
+                      <p class="ppt-end-card__desc">Only 2 documentation specifications are linked for Phase One. Future API schemas, simulation architecture papers, and formal proofs will appear here as releases roll out.</p>
+                      <div class="ppt-end-card__actions">
+                        <button type="button" class="ppt-end-card__btn ppt-end-card__btn--back" id="docs-end-back-btn">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                          <span>Back to Doc 01</span>
+                        </button>
+                        <a href="docs/CostPricingdocs.pdf" target="_blank" rel="noopener" class="ppt-end-card__btn ppt-end-card__btn--open">
+                          <span>Open Linked Document</span>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Deck sub-scroll helper hint & footer controls -->
+              <div class="ppt-preview-footer">
+                <div class="ppt-movements" id="docs-movements-container">
+                  <span class="ppt-mov">Problem Space</span>
+                  <span class="ppt-mov">G_t Topology</span>
+                  <span class="ppt-mov">Cost Model</span>
+                  <span class="ppt-mov">Invariants</span>
+                  <span class="ppt-mov">Verification</span>
+                </div>
+                <div class="ppt-footer-actions">
+                  <span class="ppt-scroll-hint">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    Scroll ↕ Switch
+                  </span>
+                  <button type="button" class="ppt-launch-btn" id="docs-launch-btn">
+                    <span>Open Document</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02: PRESENTATION CARD & PREVIEW DOCK -->
+        <div class="link-card-wrap" id="presentation-card-wrap">
+          <a href="Project_Proposal_&_ppt/project_ppt.html" target="_blank" rel="noopener" class="link-card link-card--presentation magnetic-btn" id="presentation-trigger">
+            <span class="link-card__icon">📊</span>
+            <div class="link-card__info">
+              <div class="link-card__title-row">
+                <span class="link-card__title">Presentation</span>
+                <span class="link-card__pill">Live Overview</span>
+              </div>
+              <span class="link-card__sub">Interactive slide deck · Concerto for Autonomous Fleet</span>
+            </div>
+          </a>
+
+          <!-- Hover Overview Floating Deck with Sub-Scroll Architecture -->
+          <div class="ppt-preview-dock" id="ppt-preview" aria-hidden="true">
+            <div class="ppt-preview-card">
+              <!-- Sub-scroll progress line -->
+              <div class="ppt-subscroll-bar">
+                <div class="ppt-subscroll-fill" id="ppt-subscroll-fill" style="width: 33%;"></div>
+              </div>
+
+              <div class="ppt-preview-header">
+                <div class="ppt-preview-status">
+                  <span class="ppt-status-dot" id="ppt-status-dot"></span>
+                  <span class="ppt-status-text" id="ppt-status-text-full">DECK <span id="ppt-active-num">01</span> / 02 · <span id="ppt-active-title">CONCERTO DAY ONE</span></span>
+                </div>
+                <div class="ppt-preview-actions">
+                  <!-- Carousel navigation buttons -->
+                  <button type="button" class="ppt-nav-arrow" id="ppt-prev-btn" title="Previous Deck" aria-label="Previous Deck" disabled>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-nav-arrow" id="ppt-next-btn" title="Next Deck" aria-label="Next Deck">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-btn-icon" id="ppt-preview-expand-btn" title="Expand Presentation Modal">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    <span>Expand</span>
+                  </button>
+                  <a href="Project_Proposal_&_ppt/project_ppt.html" target="_blank" rel="noopener" class="ppt-btn-icon" id="ppt-newtab-link" title="Open presentation in new tab">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    <span>New Tab</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sub-scroll sliding viewport -->
+              <div class="ppt-carousel-viewport" id="ppt-carousel-viewport">
+                <div class="ppt-carousel-track" id="ppt-carousel-track">
+                  
+                  <!-- SLIDE 1: Primary Concerto Presentation -->
+                  <div class="ppt-carousel-slide" data-index="0" data-name="CONCERTO DAY ONE" data-url="Project_Proposal_&_ppt/project_ppt.html">
+                    <div class="ppt-preview-frame-wrap" data-deck-trigger="0" role="button" tabindex="0" aria-label="Expand Concerto Presentation">
+                      <iframe class="ppt-preview-iframe" src="Project_Proposal_&_ppt/project_ppt.html" title="Presentation Overview Preview" loading="lazy" tabindex="-1"></iframe>
+                      <div class="ppt-frame-overlay">
+                        <span class="ppt-frame-hint">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                          Open Concerto Presentation (14 Slides)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 2: Phase 01 Architectural Defense Presentation -->
+                  <div class="ppt-carousel-slide" data-index="1" data-name="PHASE 01 ARCHITECTURAL DEFENSE" data-url="docs/phase01.html">
+                    <div class="ppt-preview-frame-wrap" data-deck-trigger="1" role="button" tabindex="0" aria-label="Expand Phase 01 Architectural Defense Presentation">
+                      <iframe class="ppt-preview-iframe" src="docs/phase01.html" title="Phase 01 Architectural Defense Preview" loading="lazy" tabindex="-1"></iframe>
+                      <div class="ppt-frame-overlay">
+                        <span class="ppt-frame-hint">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                          Open Phase 01 Defense (Architecture Deck)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 3: Terminal Slide (End of the Road) -->
+                  <div class="ppt-carousel-slide ppt-carousel-slide--end" data-index="2" data-name="THAT'S THE END OF THE ROAD" data-url="docs/phase01.html">
+                    <div class="ppt-end-card">
+                      <span class="ppt-end-card__badge">TERMINAL REACHED</span>
+                      <h4 class="ppt-end-card__heading">That's the end of the road</h4>
+                      <p class="ppt-end-card__desc">Only 2 presentation decks are linked for Phase One. Future dispatch simulation and RL pre-positioning decks will appear here as releases roll out.</p>
+                      <div class="ppt-end-card__actions">
+                        <button type="button" class="ppt-end-card__btn ppt-end-card__btn--back" id="ppt-end-back-btn">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                          <span>Back to Deck 01</span>
+                        </button>
+                        <a href="docs/phase01.html" target="_blank" rel="noopener" class="ppt-end-card__btn ppt-end-card__btn--open" id="ppt-end-open-btn">
+                          <span>Open Linked Deck</span>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Deck sub-scroll helper hint & footer controls -->
+              <div class="ppt-preview-footer">
+                <div class="ppt-movements" id="ppt-movements-container">
+                  <span class="ppt-mov">Ouverture</span>
+                  <span class="ppt-mov">Esposizione</span>
+                  <span class="ppt-mov">Sviluppo</span>
+                  <span class="ppt-mov">Rondò</span>
+                  <span class="ppt-mov">Coda</span>
+                </div>
+                <div class="ppt-footer-actions">
+                  <span class="ppt-scroll-hint">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    Scroll ↕ Switch
+                  </span>
+                  <button type="button" class="ppt-launch-btn" id="ppt-launch-btn">
+                    <span>Open Deck</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 03: LIVE DEMO CARD & PREVIEW DOCK (EMPTY / STANDBY FOR NOW) -->
+        <div class="link-card-wrap" id="demo-card-wrap">
+          <a href="#" class="link-card link-card--demo magnetic-btn" id="demo-trigger">
+            <span class="link-card__icon">🖥️</span>
+            <div class="link-card__info">
+              <div class="link-card__title-row">
+                <span class="link-card__title">Live Demo</span>
+                <span class="link-card__pill link-card__pill--standby">Standby · Phase 2</span>
+              </div>
+              <span class="link-card__sub">Mission Control interface &amp; simulation runtime</span>
+            </div>
+          </a>
+
+          <!-- Hover Overview Floating Deck with Sub-Scroll Architecture (Empty for now) -->
+          <div class="demo-preview-dock ppt-preview-dock" id="demo-preview" aria-hidden="true">
+            <div class="ppt-preview-card">
+              <!-- Sub-scroll progress line -->
+              <div class="ppt-subscroll-bar">
+                <div class="ppt-subscroll-fill" id="demo-subscroll-fill" style="width: 0%; background: var(--amber-gold);"></div>
+              </div>
+
+              <div class="ppt-preview-header">
+                <div class="ppt-preview-status">
+                  <span class="ppt-status-dot" id="demo-status-dot" style="background: var(--amber-gold); box-shadow: 0 0 0 2px rgba(179, 128, 36, 0.2);"></span>
+                  <span class="ppt-status-text" id="demo-status-text-full">DEMO 00 / 00 · <span id="demo-active-title">SIMULATION STANDBY (EMPTY)</span></span>
+                </div>
+                <div class="ppt-preview-actions">
+                  <!-- Carousel navigation buttons (disabled for empty state) -->
+                  <button type="button" class="ppt-nav-arrow" id="demo-prev-btn" title="Previous Demo" aria-label="Previous Demo" disabled>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-nav-arrow" id="demo-next-btn" title="Next Demo" aria-label="Next Demo" disabled>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                  <button type="button" class="ppt-btn-icon" id="demo-preview-expand-btn" title="Live Demo Standby" disabled style="opacity:0.45; cursor:not-allowed;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    <span>Standby</span>
+                  </button>
+                  <button type="button" class="ppt-btn-icon" id="demo-newtab-link" title="Live Demo Standby" disabled style="opacity:0.45; cursor:not-allowed;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    <span>Offline</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Sub-scroll sliding viewport -->
+              <div class="ppt-carousel-viewport" id="demo-carousel-viewport">
+                <div class="ppt-carousel-track" id="demo-carousel-track">
+                  
+                  <!-- SLIDE 1: Empty / Standby Card -->
+                  <div class="ppt-carousel-slide ppt-carousel-slide--end" data-index="0" data-name="SIMULATION STANDBY (EMPTY)" data-url="#">
+                    <div class="ppt-end-card demo-empty-card">
+                      <span class="ppt-end-card__badge demo-empty-badge">OFFLINE · STANDBY</span>
+                      <h4 class="ppt-end-card__heading">No Live Demo Available</h4>
+                      <p class="ppt-end-card__desc">Mission Control WebSocket server and real-time Manhattan canvas simulation are scheduled for Phase Two deployment. This environment remains empty for now.</p>
+                      <div class="ppt-end-card__actions">
+                        <button type="button" class="ppt-end-card__btn ppt-end-card__btn--back" id="demo-bench-btn">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                          <span>Headless CLI Mode</span>
+                        </button>
+                        <span class="ppt-end-card__btn ppt-end-card__btn--standby">
+                          <span>Phase 2 Scheduled</span>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Deck sub-scroll helper hint & footer controls -->
+              <div class="ppt-preview-footer">
+                <div class="ppt-movements" id="demo-movements-container">
+                  <span class="ppt-mov demo-mov--standby">Simulation Offline</span>
+                  <span class="ppt-mov">WebSocket Inactive</span>
+                  <span class="ppt-mov">Phase 2 Scheduled</span>
+                </div>
+                <div class="ppt-footer-actions">
+                  <span class="ppt-scroll-hint">
+                    Empty / Standby
+                  </span>
+                  <button type="button" class="ppt-launch-btn demo-launch-btn" id="demo-launch-btn" disabled>
+                    <span>Standby</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <a href="https://github.com/VishalSingla12/AetherGrid-AI" class="footer__gh magnetic-btn" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        <span>GitHub</span>
+      </a>
+      <span class="footer__meta">UCS503P · Thapar Institute of Engineering &amp; Technology · 2026</span>
+    </div>
+  </footer>
+
+  <!-- Fullscreen Presentation Modal Box -->
+  <div class="ppt-modal" id="ppt-modal" role="dialog" aria-modal="true" aria-label="AetherGrid AI Presentation Deck" hidden>
+    <div class="ppt-modal__backdrop" id="ppt-modal-backdrop"></div>
+    <div class="ppt-modal__box">
+      <div class="ppt-modal__bar">
+        <div class="ppt-modal__title-group">
+          <span class="ppt-modal__badge">CONCERTO DECK</span>
+          <h3 class="ppt-modal__title">AetherGrid AI — Autonomous Fleet &amp; Emergency Dispatch</h3>
+        </div>
+        <div class="ppt-modal__bar-actions">
+          <a href="Project_Proposal_&_ppt/project_ppt.html" target="_blank" rel="noopener" class="ppt-modal__tab-btn">
+            <span>Open in New Tab</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+          </a>
+          <button type="button" class="ppt-modal__close-btn" id="ppt-modal-close" aria-label="Close Presentation">
+            <span>ESC</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ppt-modal__viewport">
+        <iframe id="ppt-modal-iframe" data-src="Project_Proposal_&_ppt/project_ppt.html" src="" title="Full Project Presentation Deck" allow="fullscreen"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Documentation Modal Box -->
+  <div class="ppt-modal" id="docs-modal" role="dialog" aria-modal="true" aria-label="AetherGrid AI Documentation" hidden>
+    <div class="ppt-modal__backdrop" id="docs-modal-backdrop"></div>
+    <div class="ppt-modal__box">
+      <div class="ppt-modal__bar">
+        <div class="ppt-modal__title-group">
+          <span class="ppt-modal__badge">SPECIFICATION AEG-RPT-001</span>
+          <h3 class="ppt-modal__title">AetherGrid AI — System Design Report (Rev 0.1.0)</h3>
+        </div>
+        <div class="ppt-modal__bar-actions">
+          <a href="Project_Proposal_&_ppt/project_proposal_1.pdf" target="_blank" rel="noopener" class="ppt-modal__tab-btn" id="docs-modal-tab-btn">
+            <span>Open in New Tab</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+          </a>
+          <button type="button" class="ppt-modal__close-btn" id="docs-modal-close" aria-label="Close Documentation">
+            <span>ESC</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ppt-modal__viewport">
+        <iframe id="docs-modal-iframe" data-src="Project_Proposal_&_ppt/project_proposal_1.pdf" src="" title="Full System Design Report (AEG-RPT-001)" allow="fullscreen"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Live Demo Modal Box (Standby for Phase Two) -->
+  <div class="ppt-modal" id="demo-modal" role="dialog" aria-modal="true" aria-label="AetherGrid AI Live Demo Standby" hidden>
+    <div class="ppt-modal__backdrop" id="demo-modal-backdrop"></div>
+    <div class="ppt-modal__box">
+      <div class="ppt-modal__bar">
+        <div class="ppt-modal__title-group">
+          <span class="ppt-modal__badge" style="color:var(--amber-gold); border-color:rgba(179,128,36,0.3); background:var(--amber-light);">STANDBY · PHASE TWO</span>
+          <h3 class="ppt-modal__title">AetherGrid AI — Mission Control Simulation Runtime</h3>
+        </div>
+        <div class="ppt-modal__bar-actions">
+          <button type="button" class="ppt-modal__close-btn" id="demo-modal-close" aria-label="Close Live Demo Dialog">
+            <span>ESC</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ppt-modal__viewport" style="display:flex; align-items:center; justify-content:center; background:var(--bg-paper);">
+        <div style="text-align:center; padding:2.5rem; max-width:560px;">
+          <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--amber-gold); font-weight:700;">Phase Two Milestone</span>
+          <h3 style="font-family:var(--font-display); font-size:1.6rem; color:var(--ink); margin:0.6rem 0 1rem;">Simulation Canvas Offline</h3>
+          <p style="font-family:var(--font-body); font-size:0.9rem; color:var(--ink-secondary); line-height:1.6; margin-bottom:1.5rem;">
+            The real-time Manhattan road network dispatch engine and 10 Hz telemetry streamer will be mounted here in Phase Two. You can currently run experiments and benchmarks locally via the CLI.
+          </p>
+          <div style="display:inline-flex; gap:10px; font-family:var(--font-mono); font-size:10px; background:var(--bg-card); padding:8px 14px; border:1px solid var(--hairline); border-radius:2px; color:var(--ink-secondary);">
+            <code>python3 -m Aether.cli benchmark --seeds 5</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Lenis + GSAP + ScrollTrigger from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

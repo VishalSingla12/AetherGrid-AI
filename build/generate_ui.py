@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+html_content = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2433,3 +2435,10 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+'''
+
+target_path = 'Aether/web/static/index.html'
+with open(target_path, 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print(f"Successfully generated {target_path} ({len(html_content)} bytes)")

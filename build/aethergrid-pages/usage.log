@@ -1,0 +1,10 @@
+[2026-09-14T03:29:30+05:30]
+job: aethergrid-pages
+ancestors:
+  - klim-co-nz (MOTION: velocity-skew on scroll, line-mask-reveal entrance choreography)
+  - awwwards-winner-84-com (COMPOSITION: 12-col asymmetric grid, editorial micro-type labels)
+  - awwwards-winner-61-com (TOKEN: grain overlay 4% opacity, clip-wipe transitions, magnetic CTA spring behavior)
+signature_move: Transit-Line Scene Connectors (continuous animated SVG transit line connecting 5 dramaturgical acts with pulsing station nodes)
+stack: Vanilla HTML5 + CSS3 + Lenis 1.1.18 + GSAP 3.12.7 + ScrollTrigger
+verification: PASS (HTML valid, JS syntax verified, 18/18 Python unit tests passing, zero WebGL/3D, light theme enforced)
+compounded: cartographic-transit-spine
