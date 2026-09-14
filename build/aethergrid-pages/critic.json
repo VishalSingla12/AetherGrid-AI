@@ -1,7 +1,0 @@
-{
-  "pass": true,
-  "score": 1.0,
-  "hard_failures": [],
-  "soft_failures": [],
-  "feedback": "All invariants satisfied. Directive is production-ready."
-}
