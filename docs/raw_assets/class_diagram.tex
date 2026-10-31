@@ -1,0 +1,237 @@
+% =====================================================================
+%  AetherGrid AI - Comprehensive UML Class Diagram (single page, A3 landscape)
+%  Compile:  pdflatex aethergrid_full.tex
+% =====================================================================
+\documentclass[10pt,a3paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[landscape,margin=0.8cm]{geometry}
+\usepackage{xcolor}
+\usepackage{adjustbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,fit,backgrounds,shapes.multipart}
+\pagestyle{empty}
+
+\definecolor{ink}{HTML}{1F2A44}
+\definecolor{hdrC}{HTML}{DDE9DD}   % implemented core
+\definecolor{hdrE}{HTML}{F3E9CF}   % enumeration
+\definecolor{hdrP}{HTML}{D6E2F3}   % planned
+\definecolor{hdrA}{HTML}{F3D4D4}   % hazmat safety
+\definecolor{bdE}{HTML}{8B6914}
+\definecolor{bdP}{HTML}{3B5B88}
+\definecolor{bdA}{HTML}{9E2A2B}
+\definecolor{pkgfill}{HTML}{F7F8FA}
+\definecolor{pkgplan}{HTML}{EEF3FA}
+
+\tikzset{
+  cb/.style={draw=ink,line width=0.6pt,rectangle split,rectangle split parts=3,
+     rectangle split draw splits=true,rectangle split part fill={hdrC,white,white},
+     inner xsep=3.5pt,inner ysep=2pt,font=\scriptsize,align=left},
+  eb/.style={cb,draw=bdE,rectangle split part fill={hdrE,white,white}},
+  pb/.style={cb,draw=bdP,rectangle split part fill={hdrP,white,white}},
+  ab/.style={cb,draw=bdA,rectangle split part fill={hdrA,white,white}},
+  pkg/.style={draw=ink!55,line width=0.5pt,dashed,fill=pkgfill,inner sep=8pt},
+  pkgp/.style={pkg,draw=bdP!70,fill=pkgplan},
+  tab/.style={draw=ink!70,line width=0.5pt,fill=pkgfill,font=\scriptsize\bfseries,
+     inner xsep=4pt,inner ysep=2pt,anchor=south west},
+  comp/.style={{Diamond[length=2.8mm,width=2mm]}-,ink,line width=0.6pt},
+  aggr/.style={{Diamond[open,length=2.8mm,width=2mm]}-,ink,line width=0.6pt},
+  asc/.style={-{To[length=2.2mm,width=2.2mm]},ink,line width=0.6pt},
+  dep/.style={-{To[length=2.2mm,width=2.2mm]},ink,line width=0.6pt,dash pattern=on 3.5pt off 2.2pt},
+  rl/.style={font=\fontsize{5.6}{6.5}\selectfont\itshape,text=ink,inner sep=1pt},
+  ml/.style={font=\fontsize{5.6}{6.5}\selectfont,text=ink,inner sep=1pt},
+}
+% \cls{style}{id}{x,y}{width}{header}{attributes}{operations}
+\newcommand{\cls}[7]{\node[#1,text width=#4] (#2) at (#3)
+  {\centering #5 \nodepart{second} #6 \nodepart{third} #7};}
+\newcommand{\st}[1]{{\scriptsize\guillemotleft #1\guillemotright}\\[-1pt]}
+\newcommand{\sg}{\guillemotleft}
+\newcommand{\sd}{\guillemotright}
+
+\begin{document}
+\begin{center}
+{\Large\bfseries AetherGrid AI \,--\, Comprehensive UML Class Diagram}\\[1pt]
+{\small Implemented core and planned architecture: network model, environment dynamics, routing, fleet and dispatch, safety, and Mission Control platform}
+\end{center}
+\vspace{-6pt}
+\begin{center}
+\begin{adjustbox}{max width=\linewidth,max height=\dimexpr\textheight-3.6cm\relax}
+\begin{tikzpicture}[line join=round,line cap=round]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.core.graph
+\cls{eb}{TT}{1.6,19.5}{3.2cm}{\st{enumeration}\textbf{TerrainType}}
+ {HIGHWAY\\ARTERIAL\\URBAN\\ALLEY\\OFFROAD}{+ get\_multiplier() : float}
+\cls{cb}{ED}{8.0,19.5}{4.0cm}{\textbf{EdgeData}}
+ {+ u, v : int\\+ length\_meters : float\\+ capacity : int\\+ congestion : float\\+ is\_open : bool\\+ is\_hazard : bool}
+ {+ max\_speed\_mps() : float}
+\cls{cb}{ND}{13.9,19.5}{4.0cm}{\textbf{NodeData}}
+ {+ id : int\\+ x, y : float\\+ lat, lon : float\\+ is\_depot : bool\\+ is\_hospital : bool}
+ {+ distance\_to(other) : float}
+\cls{cb}{DG}{9.6,15.8}{5.2cm}{\textbf{DirectedGraph}}
+ {+ nodes : Dict[int, NodeData]\\+ adj : Dict[int, Dict[int, EdgeData]]\\+ closed\_edges : Set[Tuple]}
+ {+ add\_node(\ldots) : NodeData\\+ add\_edge(\ldots) : EdgeData\\+ close\_edge(u, v) : bool\\+ reopen\_edge(u, v) : bool\\+ get\_open\_out\_edges(u) : List}
+\cls{cb}{OSM}{1.9,15.8}{4.6cm}{\st{utility}\textbf{OSMRoadNetworkLoader}}
+ {\strut}{+ load\_from\_osm\_file(path) :\\\hspace*{1em}DirectedGraph\\+ load\_preset\_map(name) :\\\hspace*{1em}DirectedGraph}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.core.dynamics
+\cls{cb}{WM}{20.7,20.0}{4.6cm}{\textbf{WeatherManager}}
+ {\textminus\ transitions : Dict}
+ {+ step(dt) : bool\\+ set\_weather(type) : void\\+ get\_corridor\_factor(edge) : float}
+\cls{eb}{WT}{27.2,20.0}{3.2cm}{\st{enumeration}\textbf{WeatherType}}
+ {CLEAR\\RAIN\\FOG\\SNOW}{+ get\_multiplier() : float}
+\cls{cb}{CM}{20.7,15.8}{4.7cm}{\textbf{CongestionManager}}
+ {+ smoothing\_constant : float}
+ {+ step(dt) : void\\+ get\_network\_statistics() : Dict\\+ get\_congested\_edges() : List}
+\cls{cb}{HM}{20.7,11.5}{4.9cm}{\textbf{HazardManager}}
+ {+ active\_hazards : Dict\\+ active\_closures : Dict}
+ {+ inject\_edge\_hazard(\ldots) : bool\\+ inject\_edge\_closure(\ldots) : bool\\+ inject\_block\_closure(u, v) : List\\+ inject\_spatial\_hazard(\ldots) : List}
+\cls{cb}{COST}{27.0,14.25}{5.3cm}{\st{service}\textbf{CostPricingEngine}}
+ {+ congestion\_sensitivity : float\\+ hazard\_penalty\_seconds : float}
+ {+ calculate\_edge\_cost(edge) : float\\+ evaluate\_snow\_corridor(edge) : float\\+ evaluate\_flood\_ponding(edge) : float}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.core.routing
+\cls{cb}{RR}{37.0,19.2}{5.0cm}{\st{dataclass}\textbf{RouteResult}}
+ {+ success : bool\\+ path : List[int]\\+ total\_cost\_seconds : float\\+ nodes\_expanded : int\\+ search\_time\_ms : float}
+ {+ get\_search\_efficiency() : float\\+ calculate\_divergence(other) : float}
+\cls{cb}{PE}{37.0,13.7}{6.7cm}{\st{service}\textbf{PathTraversalEngine}}
+ {\strut}
+ {+ find\_shortest\_path(start, goal) : RouteResult\\+ find\_bidirectional(start, goal) : RouteResult\\+ find\_weighted\_a\_star(start, goal) : RouteResult\\+ find\_dijkstra(start, goal) : RouteResult\\+ compute\_eta\_matrix(starts, goals) : Matrix\\+ find\_hierarchical\_hpa(start, goal) : RouteResult}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.data
+\cls{pb}{DB}{5.6,8.5}{5.0cm}{\st{planned}\textbf{DatabaseAdapter}}
+ {+ connection\_pool : PostGISPool}
+ {+ persist\_road\_network(graph) : void\\+ store\_route\_telemetry(result) : void\\+ load\_historical\_demand() : List}
+\cls{cb}{VERIF}{13.0,8.5}{5.8cm}{\textbf{VerificationSuite}}
+ {+ pre\_registered\_seeds : List[int]}
+ {+ verify\_seed\_determinism() : bool\\+ verify\_closure\_detour\_invariant() : bool\\+ verify\_battery\_fsm\_invariants() : bool\\+ generate\_benchmark\_report() : Dict}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.web.platform
+\cls{cb}{HH}{2.7,1.5}{4.2cm}{\textbf{AetherHTTPRequestHandler}\\{\fontsize{5.6}{6.5}\selectfont\itshape extends BaseHTTPRequestHandler}}
+ {\strut}{+ do\_GET() : void\\+ do\_POST() : void\\+ do\_OPTIONS() : void\\+ serve\_static\_dashboard() : void}
+\cls{cb}{SM}{9.3,1.5}{5.4cm}{\textbf{SimulationStateManager}}
+ {+ graph : DirectedGraph\\+ weather\_mgr : WeatherManager\\+ congestion\_mgr : CongestionManager\\+ hazard\_mgr : HazardManager\\+ path\_engine : PathTraversalEngine}
+ {+ compute\_route(start, goal) : Dict\\+ toggle\_corridor\_closure(u, v) : Dict\\+ set\_weather(weather\_type) : Dict\\+ trigger\_traffic\_surge() : Dict\\+ reset\_all\_disruptions() : Dict}
+\cls{pb}{WS}{15.9,1.5}{4.6cm}{\st{planned}\textbf{WebSocketServer}}
+ {+ connected\_clients : Set}
+ {+ broadcast\_state\_diff(10Hz) : void\\+ stream\_telemetry() : void}
+\cls{ab}{HAZ}{9.3,-4.3}{5.3cm}{\textbf{HazMatDirectiveManager}}
+ {+ ppe\_protocol\_level : int\\+ active\_chemical\_spills : int}
+ {+ evaluate\_route\_exposure(route) : int\\+ get\_mandatory\_ppe\_directive() : str\\+ alert\_hospital\_decon\_unit() : void}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.fleet.agents (planned)
+\cls{pb}{INCGEN}{22.3,5.5}{5.5cm}{\st{planned}\textbf{IncidentGenerator}}
+ {+ base\_arrival\_rate : float\\+ diurnal\_rush\_multiplier : float\\+ seed : int}
+ {+ generate\_poisson\_batch(dt) : List\\+ sample\_incident\_category() : IncidentCategory}
+\cls{pb}{INC}{29.4,5.5}{4.4cm}{\st{planned}\textbf{Incident}}
+ {+ incident\_id : int\\+ category : IncidentCategory\\+ location\_node : int\\+ sla\_deadline\_seconds : float\\+ required\_capability : str\\+ is\_breached : bool}
+ {+ check\_sla\_status(time) : bool\\+ escalate\_priority() : void}
+\cls{pb}{FA}{37.0,5.5}{5.2cm}{\st{planned}\textbf{FleetAgent}}
+ {+ agent\_id : int\\+ state : AgentState\\+ current\_node : int\\+ battery\_percentage : float\\+ is\_siren\_active : bool\\+ assigned\_route : RouteResult}
+ {+ transition\_state(new\_state) : void\\+ step\_movement(dt) : void\\+ update\_energy\_consumption(dt) : void\\+ check\_recharge\_threshold() : bool}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% aether.ai.optimization (planned)
+\cls{pb}{BD}{32.4,-1.0}{5.6cm}{\st{planned}\textbf{BatchDispatcher}}
+ {+ batch\_interval\_seconds : float\\+ deadline\_penalty\_weight : float}
+ {+ form\_cost\_matrix(agents, calls) : Matrix\\+ solve\_hungarian\_matching() : Dict\\+ dispatch\_assignments() : List\\+ rebuffer\_unassigned\_calls() : void}
+\cls{pb}{RL}{38.9,-1.5}{5.4cm}{\st{planned}\textbf{RLRepositioningAgent}}
+ {+ spatial\_sectors : List[Sector]\\+ q\_table : Dict[Tuple, float]\\+ exploration\_rate : float\\+ discount\_factor : float}
+ {+ observe\_state(sector, time) : State\\+ select\_action(state) : Action\\+ update\_policy(reward) : void\\+ generate\_relocation\_order(agent) : void}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% packages
+\begin{scope}[on background layer]
+ \node[pkg,fit=(TT)(ED)(ND)(DG)(OSM)] (P1) {};
+ \node[tab] at (P1.north west) {aether.core.graph};
+ \node[pkg,fit=(WM)(WT)(CM)(HM)(COST)] (P2) {};
+ \node[tab] at (P2.north west) {aether.core.dynamics};
+ \node[pkg,fit=(RR)(PE)] (P3) {};
+ \node[tab] at (P3.north west) {aether.core.routing};
+ \node[pkg,fit=(DB)(VERIF)] (P4) {};
+ \node[tab] at (P4.north west) {aether.data.verification};
+ \node[pkg,fit=(HH)(SM)(WS)(HAZ)] (P5) {};
+ \node[tab] at (P5.north west) {aether.web.platform};
+ \node[pkgp,fit=(INCGEN)(INC)(FA)] (P6) {};
+ \node[tab,draw=bdP,text=bdP] at (P6.north west) {aether.fleet.agents (planned)};
+ \node[pkgp,fit=(BD)(RL)] (P7) {};
+ \node[tab,anchor=south east,draw=bdP,text=bdP] at (P7.north east) {aether.ai.optimization (planned)};
+\end{scope}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% relationships
+% graph model
+\draw[asc] (ED.west) -- (TT.east)
+  node[pos=0.12,above,ml]{*} node[pos=0.88,above,ml]{1} node[pos=0.5,below,rl]{+terrain};
+\coordinate (g1) at ($(DG.north)+(-1.9,0)$);
+\coordinate (g2) at ($(DG.north)+(2.3,0)$);
+\draw[comp] (g1) -- (g1 |- ED.south) node[pos=0.3,left,ml]{1} node[pos=0.78,left,ml]{0..*};
+\draw[comp] (g2) -- (g2 |- ND.south) node[pos=0.3,right,ml]{1} node[pos=0.78,right,ml]{1..*};
+\draw[dep] (OSM.east) -- (DG.west) node[midway,above,rl]{\sg create\sd};
+
+% dynamics
+\draw[asc] (WM.east) -- (WT.west)
+  node[pos=0.1,above,ml]{1} node[pos=0.8,above,ml]{1} node[pos=0.5,below,rl]{+current\_weather};
+\draw[asc] (CM.west) -- (DG.east |- CM.west)
+  node[pos=0.95,above,ml]{1} node[pos=0.7,below,rl]{+graph};
+\coordinate (hs) at ($(DG.east)+(0,-0.9)$);
+\coordinate (ht) at (14.8,0);
+\draw[asc] (HM.west) -- (HM.west -| ht) -- (hs -| ht) -- (hs);
+\node[ml,anchor=south west] at ($(hs)+(0.1,0.02)$) {1};
+\node[rl,anchor=north west] at ($(hs)+(0.3,-0.04)$) {+graph};
+\coordinate (c1) at ($(COST.west)+(0,0.6)$);
+\coordinate (c2) at ($(COST.west)+(0,-0.6)$);
+\coordinate (ct) at (23.7,0);
+\draw[dep] (c1) -- (c1 -| ct) -- (ct |- CM.east) -- (CM.east);
+\draw[dep] (c2) -- (c2 -| ct) -- (ct |- HM.east) -- (HM.east);
+
+% routing
+\coordinate (p1) at ($(PE.west)+(0,0.55)$);
+\draw[asc] (p1) -- (COST.east |- p1)
+  node[pos=0.86,above,ml]{1} node[pos=0.5,below,rl]{+pricing\_engine};
+\draw[dep] (PE.north) -- (RR.south) node[midway,right,rl]{\sg create\sd};
+
+% data
+\coordinate (d1) at ($(DG.south)+(-2.0,0)$);
+\coordinate (d2) at ($(DG.south)+(1.8,0)$);
+\draw[dep] (d1 |- DB.north) -- (d1) node[midway,left,rl]{\sg persist\sd};
+\draw[dep] (d2 |- VERIF.north) -- (d2) node[midway,right,rl]{\sg verify\sd};
+
+% web platform
+\draw[asc] (HH.east) -- (SM.west) node[pos=0.8,above,ml]{1} node[pos=0.4,below,rl]{+state};
+\draw[dep] (WS.west) -- (SM.east) node[midway,above,rl]{\sg read\sd};
+\draw[dep] (SM.south) -- (HAZ.north) node[midway,right,rl]{\sg use\sd};
+
+% fleet and dispatch
+\draw[dep] (INCGEN.east) -- (INC.west) node[midway,above,rl]{\sg create\sd};
+\coordinate (b1) at ($(BD.north)+(-1.8,0)$);
+\draw[aggr] (b1) -- (b1 |- INC.south)
+  node[pos=0.12,left,ml]{1} node[pos=0.88,left,ml]{0..*} node[pos=0.5,left,rl]{+call\_buffer};
+\coordinate (q) at ($(PE.west)+(0,-1.0)$);
+\draw[dep] (BD.north) -- node[pos=0.8,left,rl]{\sg use\sd} (BD.north |- q) -- (q);
+\coordinate (e) at ($(BD.north)+(2.2,0)$);
+\draw[dep] (e) -- (e |- FA.south) node[midway,right,rl]{\sg assign\sd};
+\coordinate (r) at ($(RL.north)+(-0.4,0)$);
+\draw[dep] (r) -- (r |- FA.south) node[midway,left,rl]{\sg relocate\sd};
+
+\end{tikzpicture}
+\end{adjustbox}
+\end{center}
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize]
+  \draw[comp] (0,0)--(1.0,0);   \node[anchor=west,text=ink] at (1.1,0) {Composition};
+  \draw[aggr] (3.4,0)--(4.4,0); \node[anchor=west,text=ink] at (4.5,0) {Aggregation};
+  \draw[asc]  (6.8,0)--(7.8,0); \node[anchor=west,text=ink] at (7.9,0) {Directed association};
+  \draw[dep]  (11.2,0)--(12.2,0); \node[anchor=west,text=ink] at (12.3,0) {Dependency};
+  \node[cb,minimum width=0.6cm,minimum height=0.35cm] at (15.6,0) {};
+  \node[anchor=west,text=ink] at (16.0,0) {Implemented core};
+  \node[pb,minimum width=0.6cm,minimum height=0.35cm] at (19.6,0) {};
+  \node[anchor=west,text=ink] at (20.0,0) {Planned subsystem};
+  \node[ab,minimum width=0.6cm,minimum height=0.35cm] at (23.9,0) {};
+  \node[anchor=west,text=ink] at (24.3,0) {HazMat safety directive};
+  \node[eb,minimum width=0.6cm,minimum height=0.35cm] at (28.9,0) {};
+  \node[anchor=west,text=ink] at (29.3,0) {Enumeration};
+  \node[anchor=west,text=ink] at (32.4,0) {Visibility: + public, \textminus\ private};
+\end{tikzpicture}
+\end{center}
+\end{document}
